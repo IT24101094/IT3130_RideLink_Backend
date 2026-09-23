@@ -3,6 +3,8 @@ package com.ridelink.ridelinkmanagementservice.controller;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.service.RideService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,13 +20,18 @@ public class RideController {
 
     @Data
     public static class RideRequest {
+        @NotBlank(message = "Field is mandatory")
         private String passengerId;
+
+        @NotBlank(message = "Field is mandatory")
         private String pickupLocation;
+
+        @NotBlank(message = "Field is mandatory")
         private String destination;
     }
 
     @PostMapping
-    public ResponseEntity<Ride> createRide(@RequestBody RideRequest request) {
+    public ResponseEntity<Ride> createRide(@Valid @RequestBody RideRequest request) {
         Ride createdRide = rideService.createRideRequest(
                 request.getPassengerId(),
                 request.getPickupLocation(),
