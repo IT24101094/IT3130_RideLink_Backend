@@ -27,14 +27,34 @@ public class RideService {
 
     public Ride assignDriver(String rideId, String driverId) {
         Ride ride = getRideById(rideId);
-
-        if (ride.getStatus() != RideStatus.REQUESTED) {
-            throw new RuntimeException("Cannot assign driver: Ride status is not REQUESTED");
-        }
-
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ASSIGNED);
+        return rideRepository.save(ride);
+    }
 
+    public Ride acceptRide(String rideId, String driverId) {
+        Ride ride = getRideById(rideId);
+        ride.setDriverId(driverId);
+        ride.setStatus(RideStatus.ACCEPTED);
+        return rideRepository.save(ride);
+    }
+
+    public Ride startRide(String rideId) {
+        Ride ride = getRideById(rideId);
+        ride.setStatus(RideStatus.IN_PROGRESS);
+        return rideRepository.save(ride);
+    }
+
+    public Ride completeRide(String rideId) {
+        Ride ride = getRideById(rideId);
+        ride.setStatus(RideStatus.COMPLETED);
+        ride.setCompletedTime(LocalDateTime.now());
+        return rideRepository.save(ride);
+    }
+
+    public Ride cancelRide(String rideId) {
+        Ride ride = getRideById(rideId);
+        ride.setStatus(RideStatus.CANCELLED);
         return rideRepository.save(ride);
     }
 

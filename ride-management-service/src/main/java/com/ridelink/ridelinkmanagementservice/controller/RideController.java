@@ -48,6 +48,32 @@ public class RideController {
         return ResponseEntity.ok(updatedRide);
     }
 
+    @PutMapping("/{id}/accept")
+    public ResponseEntity<Ride> acceptRide(
+            @PathVariable String id,
+            @RequestParam String driverId) {
+        Ride updatedRide = rideService.acceptRide(id, driverId);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/start")
+    public ResponseEntity<Ride> startRide(@PathVariable String id) {
+        Ride updatedRide = rideService.startRide(id);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Ride> completeRide(@PathVariable String id) {
+        Ride updatedRide = rideService.completeRide(id);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Ride> cancelRide(@PathVariable String id) {
+        Ride updatedRide = rideService.cancelRide(id);
+        return ResponseEntity.ok(updatedRide);
+    }
+
     @PutMapping("/{id}/status")
     public ResponseEntity<Ride> updateRideStatus(
             @PathVariable String id,
