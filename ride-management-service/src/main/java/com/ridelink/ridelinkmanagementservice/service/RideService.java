@@ -1,6 +1,8 @@
 package com.ridelink.ridelinkmanagementservice.service;
 
 import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
+import com.ridelink.ridelinkmanagementservice.client.DriverServiceClient;
+import com.ridelink.ridelinkmanagementservice.dto.DriverDto;
 import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
@@ -16,6 +18,7 @@ public class RideService {
 
     private final RideRepository rideRepository;
     private final AccountServiceClient accountServiceClient;
+    private final DriverServiceClient driverServiceClient;
 
     public Ride createRideRequest(String passengerId, String pickupLocation, String destination) {
         Ride ride = new Ride();
@@ -35,6 +38,10 @@ public class RideService {
         Ride ride = getRideById(rideId);
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ASSIGNED);
+
+        DriverDto driver = driverServiceClient.getDriverDetails(driverId);
+        System.out.println("--- Driver Details Fetched via FeignClient: Name = " + driver.getName() + ", Vehicle = " + driver.getVehicleRegistrationNumber() + " ---");
+
         return rideRepository.save(ride);
     }
 
@@ -42,6 +49,10 @@ public class RideService {
         Ride ride = getRideById(rideId);
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ACCEPTED);
+
+        DriverDto driver = driverServiceClient.getDriverDetails(driverId);
+        System.out.println("--- Driver Details Fetched via FeignClient: Name = " + driver.getName() + ", Vehicle = " + driver.getVehicleRegistrationNumber() + " ---");
+
         return rideRepository.save(ride);
     }
 

@@ -1,6 +1,8 @@
 package com.ridelink.ridelinkmanagementservice.service;
 
 import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
+import com.ridelink.ridelinkmanagementservice.client.DriverServiceClient;
+import com.ridelink.ridelinkmanagementservice.dto.DriverDto;
 import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
@@ -26,6 +28,9 @@ class RideServiceTest {
 
     @Mock
     private AccountServiceClient accountServiceClient;
+
+    @Mock
+    private DriverServiceClient driverServiceClient;
 
     @InjectMocks
     private RideService rideService;
@@ -60,6 +65,8 @@ class RideServiceTest {
 
     @Test
     void assignDriver_Success() {
+        DriverDto mockDriver = new DriverDto("driver789", "Mock Driver", "LIC-0000", "XXX-0000");
+        when(driverServiceClient.getDriverDetails("driver789")).thenReturn(mockDriver);
         when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
         when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -67,11 +74,14 @@ class RideServiceTest {
 
         assertEquals(RideStatus.ASSIGNED, updated.getStatus());
         assertEquals("driver789", updated.getDriverId());
+        verify(driverServiceClient).getDriverDetails("driver789");
         verify(rideRepository).save(sampleRide);
     }
 
     @Test
     void acceptRide_Success() {
+        DriverDto mockDriver = new DriverDto("driver789", "Mock Driver", "LIC-0000", "XXX-0000");
+        when(driverServiceClient.getDriverDetails("driver789")).thenReturn(mockDriver);
         when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
         when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -79,6 +89,7 @@ class RideServiceTest {
 
         assertEquals(RideStatus.ACCEPTED, updated.getStatus());
         assertEquals("driver789", updated.getDriverId());
+        verify(driverServiceClient).getDriverDetails("driver789");
         verify(rideRepository).save(sampleRide);
     }
 
