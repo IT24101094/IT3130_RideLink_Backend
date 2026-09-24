@@ -2,6 +2,7 @@ package com.ridelink.ridelinkmanagementservice.service;
 
 import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
 import com.ridelink.ridelinkmanagementservice.client.DriverServiceClient;
+import com.ridelink.ridelinkmanagementservice.client.FarePaymentServiceClient;
 import com.ridelink.ridelinkmanagementservice.dto.DriverDto;
 import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
@@ -31,6 +32,9 @@ class RideServiceTest {
 
     @Mock
     private DriverServiceClient driverServiceClient;
+
+    @Mock
+    private FarePaymentServiceClient farePaymentServiceClient;
 
     @InjectMocks
     private RideService rideService;
@@ -108,11 +112,13 @@ class RideServiceTest {
     void completeRide_Success() {
         when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
         when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(farePaymentServiceClient.calculateFare("ride123")).thenReturn("Mock Fare Calculation Triggered");
 
         Ride updated = rideService.completeRide("ride123");
 
         assertEquals(RideStatus.COMPLETED, updated.getStatus());
         assertNotNull(updated.getCompletedTime());
+        verify(farePaymentServiceClient).calculateFare("ride123");
         verify(rideRepository).save(sampleRide);
     }
 
