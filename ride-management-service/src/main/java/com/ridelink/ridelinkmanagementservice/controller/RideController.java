@@ -3,6 +3,8 @@ package com.ridelink.ridelinkmanagementservice.controller;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.service.RideService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,13 +20,18 @@ public class RideController {
 
     @Data
     public static class RideRequest {
+        @NotBlank(message = "Field is mandatory")
         private String passengerId;
+
+        @NotBlank(message = "Field is mandatory")
         private String pickupLocation;
+
+        @NotBlank(message = "Field is mandatory")
         private String destination;
     }
 
     @PostMapping
-    public ResponseEntity<Ride> createRide(@RequestBody RideRequest request) {
+    public ResponseEntity<Ride> createRide(@Valid @RequestBody RideRequest request) {
         Ride createdRide = rideService.createRideRequest(
                 request.getPassengerId(),
                 request.getPickupLocation(),
@@ -38,6 +45,32 @@ public class RideController {
             @PathVariable String id,
             @RequestParam String driverId) {
         Ride updatedRide = rideService.assignDriver(id, driverId);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/accept")
+    public ResponseEntity<Ride> acceptRide(
+            @PathVariable String id,
+            @RequestParam String driverId) {
+        Ride updatedRide = rideService.acceptRide(id, driverId);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/start")
+    public ResponseEntity<Ride> startRide(@PathVariable String id) {
+        Ride updatedRide = rideService.startRide(id);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Ride> completeRide(@PathVariable String id) {
+        Ride updatedRide = rideService.completeRide(id);
+        return ResponseEntity.ok(updatedRide);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Ride> cancelRide(@PathVariable String id) {
+        Ride updatedRide = rideService.cancelRide(id);
         return ResponseEntity.ok(updatedRide);
     }
 

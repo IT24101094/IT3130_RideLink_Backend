@@ -1,0 +1,106 @@
+package com.ridelink.ridelinkmanagementservice.service;
+
+import com.ridelink.ridelinkmanagementservice.model.Ride;
+import com.ridelink.ridelinkmanagementservice.model.RideStatus;
+import com.ridelink.ridelinkmanagementservice.repository.RideRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class RideServiceTest {
+
+    @Mock
+    private RideRepository rideRepository;
+
+    @InjectMocks
+    private RideService rideService;
+
+    private Ride sampleRide;
+
+    @BeforeEach
+    void setUp() {
+        sampleRide = new Ride();
+        sampleRide.setId("ride123");
+        sampleRide.setPassengerId("passenger456");
+        sampleRide.setStatus(RideStatus.REQUESTED);
+    }
+
+    @Test
+    void assignDriver_Success() {
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Ride updated = rideService.assignDriver("ride123", "driver789");
+
+        assertEquals(RideStatus.ASSIGNED, updated.getStatus());
+        assertEquals("driver789", updated.getDriverId());
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void acceptRide_Success() {
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Ride updated = rideService.acceptRide("ride123", "driver789");
+
+        assertEquals(RideStatus.ACCEPTED, updated.getStatus());
+        assertEquals("driver789", updated.getDriverId());
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void startRide_Success() {
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Ride updated = rideService.startRide("ride123");
+
+        assertEquals(RideStatus.IN_PROGRESS, updated.getStatus());
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void completeRide_Success() {
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Ride updated = rideService.completeRide("ride123");
+
+        assertEquals(RideStatus.COMPLETED, updated.getStatus());
+        assertNotNull(updated.getCompletedTime());
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void cancelRide_Success() {
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Ride updated = rideService.cancelRide("ride123");
+
+        assertEquals(RideStatus.CANCELLED, updated.getStatus());
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void rideNotFound_ThrowsRuntimeException() {
+        when(rideRepository.findById("nonexistent")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> rideService.assignDriver("nonexistent", "d1"));
+        assertThrows(RuntimeException.class, () -> rideService.acceptRide("nonexistent", "d1"));
+        assertThrows(RuntimeException.class, () -> rideService.startRide("nonexistent"));
+        assertThrows(RuntimeException.class, () -> rideService.completeRide("nonexistent"));
+        assertThrows(RuntimeException.class, () -> rideService.cancelRide("nonexistent"));
+    }
+}
