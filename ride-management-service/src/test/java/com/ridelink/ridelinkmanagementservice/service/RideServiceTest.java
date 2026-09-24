@@ -1,5 +1,7 @@
 package com.ridelink.ridelinkmanagementservice.service;
 
+import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
+import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.repository.RideRepository;
@@ -22,6 +24,9 @@ class RideServiceTest {
     @Mock
     private RideRepository rideRepository;
 
+    @Mock
+    private AccountServiceClient accountServiceClient;
+
     @InjectMocks
     private RideService rideService;
 
@@ -33,6 +38,24 @@ class RideServiceTest {
         sampleRide.setId("ride123");
         sampleRide.setPassengerId("passenger456");
         sampleRide.setStatus(RideStatus.REQUESTED);
+    }
+
+    @Test
+    void createRideRequest_Success() {
+        PassengerDto mockPassenger = new PassengerDto("passenger456", "John Doe", "123-456-7890");
+        when(accountServiceClient.getPassengerDetails("passenger456")).thenReturn(mockPassenger);
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Ride created = rideService.createRideRequest("passenger456", "LocA", "LocB");
+
+        assertNotNull(created);
+        assertEquals("passenger456", created.getPassengerId());
+        assertEquals("LocA", created.getPickupLocation());
+        assertEquals("LocB", created.getDestination());
+        assertEquals(RideStatus.REQUESTED, created.getStatus());
+        assertNotNull(created.getRequestedTime());
+        verify(accountServiceClient).getPassengerDetails("passenger456");
+        verify(rideRepository).save(any(Ride.class));
     }
 
     @Test
