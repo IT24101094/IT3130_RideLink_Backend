@@ -1,5 +1,7 @@
 package com.ridelink.ridelinkmanagementservice.service;
 
+import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
+import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.repository.RideRepository;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 public class RideService {
 
     private final RideRepository rideRepository;
+    private final AccountServiceClient accountServiceClient;
 
     public Ride createRideRequest(String passengerId, String pickupLocation, String destination) {
         Ride ride = new Ride();
@@ -21,6 +24,9 @@ public class RideService {
         ride.setDestination(destination);
         ride.setStatus(RideStatus.REQUESTED);
         ride.setRequestedTime(LocalDateTime.now());
+
+        PassengerDto passenger = accountServiceClient.getPassengerDetails(ride.getPassengerId());
+        System.out.println("--- Passenger Details Fetched via FeignClient: Name = " + passenger.getName() + ", Phone = " + passenger.getPhoneNumber() + " ---");
 
         return rideRepository.save(ride);
     }
