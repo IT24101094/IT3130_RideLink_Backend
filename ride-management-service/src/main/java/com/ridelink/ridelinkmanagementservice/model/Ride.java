@@ -1,5 +1,6 @@
 package com.ridelink.ridelinkmanagementservice.model;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,12 +18,15 @@ public class Ride {
     @Id
     private String id;
 
+    @NotBlank(message = "Field is mandatory")
     private String passengerId;
 
     private String driverId;
 
+    @NotBlank(message = "Field is mandatory")
     private String pickupLocation;
 
+    @NotBlank(message = "Field is mandatory")
     private String destination;
 
     private RideStatus status;
