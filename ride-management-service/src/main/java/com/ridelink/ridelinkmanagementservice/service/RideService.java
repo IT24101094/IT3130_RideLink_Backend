@@ -1,6 +1,9 @@
 package com.ridelink.ridelinkmanagementservice.service;
 
 import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
+import com.ridelink.ridelinkmanagementservice.client.DriverServiceClient;
+import com.ridelink.ridelinkmanagementservice.client.FarePaymentServiceClient;
+import com.ridelink.ridelinkmanagementservice.dto.DriverDto;
 import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
@@ -16,6 +19,8 @@ public class RideService {
 
     private final RideRepository rideRepository;
     private final AccountServiceClient accountServiceClient;
+    private final DriverServiceClient driverServiceClient;
+    private final FarePaymentServiceClient farePaymentServiceClient;
 
     public Ride createRideRequest(String passengerId, String pickupLocation, String destination) {
         Ride ride = new Ride();
@@ -35,6 +40,10 @@ public class RideService {
         Ride ride = getRideById(rideId);
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ASSIGNED);
+
+        DriverDto driver = driverServiceClient.getDriverDetails(driverId);
+        System.out.println("--- Driver Details Fetched via FeignClient: Name = " + driver.getName() + ", Vehicle = " + driver.getVehicleRegistrationNumber() + " ---");
+
         return rideRepository.save(ride);
     }
 
@@ -42,6 +51,10 @@ public class RideService {
         Ride ride = getRideById(rideId);
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ACCEPTED);
+
+        DriverDto driver = driverServiceClient.getDriverDetails(driverId);
+        System.out.println("--- Driver Details Fetched via FeignClient: Name = " + driver.getName() + ", Vehicle = " + driver.getVehicleRegistrationNumber() + " ---");
+
         return rideRepository.save(ride);
     }
 
@@ -51,11 +64,16 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    public Ride completeRide(String rideId) {
-        Ride ride = getRideById(rideId);
+    public Ride completeRide(String id) {
+        Ride ride = getRideById(id);
         ride.setStatus(RideStatus.COMPLETED);
         ride.setCompletedTime(LocalDateTime.now());
-        return rideRepository.save(ride);
+        Ride savedRide = rideRepository.save(ride);
+
+        farePaymentServiceClient.calculateFare(id);
+        System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + id + " ---");
+
+        return savedRide;
     }
 
     public Ride cancelRide(String rideId) {
