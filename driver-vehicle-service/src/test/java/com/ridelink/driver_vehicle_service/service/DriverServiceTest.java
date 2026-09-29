@@ -1,5 +1,6 @@
 package com.ridelink.driver_vehicle_service.service;
 
+import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -531,5 +532,82 @@ class DriverServiceTest {
 
         verify(driverRepository, times(1))
                 .findById("DRV001");
+    }
+
+
+    // =========================================================
+    // TEST 10 - UPDATE DRIVER AVAILABILITY
+    // =========================================================
+
+    @Test
+    void shouldUpdateDriverAvailabilitySuccessfully() {
+
+        // Arrange
+        testDriver.setAvailable(true);
+
+        DriverAvailabilityRequest request =
+                new DriverAvailabilityRequest(false);
+
+        when(driverRepository.findById("DRV001"))
+                .thenReturn(Optional.of(testDriver));
+
+        when(driverRepository.save(any(Driver.class)))
+                .thenAnswer(invocation ->
+                        invocation.getArgument(0));
+
+        // Act
+        DriverProfileResponse response =
+                driverService.updateDriverAvailability(
+                        "DRV001",
+                        request
+                );
+
+        // Assert
+        assertNotNull(response);
+
+        assertEquals(
+                "DRV001",
+                response.getId()
+        );
+
+        assertEquals(
+                "Nimal Perera",
+                response.getName()
+        );
+
+        assertEquals(
+                "B1234567",
+                response.getLicenseNumber()
+        );
+
+        assertFalse(
+                response.isAvailable()
+        );
+
+        assertEquals(
+                "Colombo",
+                response.getServiceArea()
+        );
+
+        assertNotNull(
+                response.getVehicle()
+        );
+
+        assertEquals(
+                "CAB-1234",
+                response.getVehicle().getRegistrationNumber()
+        );
+
+        // Verify the actual Driver object was changed
+        assertFalse(
+                testDriver.isAvailable()
+        );
+
+        // Verify repository interactions
+        verify(driverRepository, times(1))
+                .findById("DRV001");
+
+        verify(driverRepository, times(1))
+                .save(testDriver);
     }
 }
