@@ -1,5 +1,6 @@
 package com.ridelink.driver_vehicle_service.service;
 
+import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -91,6 +92,36 @@ public class DriverService {
                 updatedDriver.getName(),
                 updatedDriver.getLicenseNumber(),
                 vehicleRegistrationNumber
+        );
+    }
+
+
+    // =========================================================
+    // UPDATE DRIVER AVAILABILITY
+    // =========================================================
+
+    public DriverProfileResponse updateDriverAvailability(
+            String id,
+            DriverAvailabilityRequest request) {
+
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(
+                        () -> new DriverNotFoundException(id)
+                );
+
+        driver.setAvailable(request.isAvailable());
+
+        Driver updatedDriver =
+                driverRepository.save(driver);
+
+        return new DriverProfileResponse(
+                updatedDriver.getId(),
+                updatedDriver.getName(),
+                updatedDriver.getLicenseNumber(),
+                updatedDriver.isAvailable(),
+                updatedDriver.getServiceArea(),
+                updatedDriver.getCurrentLocation(),
+                updatedDriver.getVehicle()
         );
     }
 

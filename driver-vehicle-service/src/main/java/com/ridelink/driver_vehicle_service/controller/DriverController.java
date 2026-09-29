@@ -1,5 +1,6 @@
 package com.ridelink.driver_vehicle_service.controller;
 
+import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -75,6 +77,29 @@ public class DriverController {
 
         DriverResponse updatedDriver =
                 driverService.updateDriver(id, request);
+
+        return ResponseEntity.ok(updatedDriver);
+    }
+
+
+    // =========================================================
+    // UPDATE DRIVER AVAILABILITY
+    // =========================================================
+
+    @Operation(
+            summary = "Update driver availability",
+            description = "Updates the availability status of an existing driver"
+    )
+    @PatchMapping("/{id}/availability")
+    public ResponseEntity<DriverProfileResponse> updateDriverAvailability(
+            @PathVariable String id,
+            @RequestBody DriverAvailabilityRequest request) {
+
+        DriverProfileResponse updatedDriver =
+                driverService.updateDriverAvailability(
+                        id,
+                        request
+                );
 
         return ResponseEntity.ok(updatedDriver);
     }
