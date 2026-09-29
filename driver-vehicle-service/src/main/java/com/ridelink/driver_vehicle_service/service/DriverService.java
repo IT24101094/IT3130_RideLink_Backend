@@ -1,12 +1,15 @@
 package com.ridelink.driver_vehicle_service.service;
 
-import java.util.List;
+import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
+
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class DriverService {
@@ -17,7 +20,11 @@ public class DriverService {
         this.driverRepository = driverRepository;
     }
 
+
+    // =========================================================
     // CREATE DRIVER
+    // =========================================================
+
     public DriverResponse createDriver(DriverRequest request) {
 
         Driver driver = new Driver();
@@ -45,53 +52,73 @@ public class DriverService {
                 vehicleRegistrationNumber
         );
     }
+
+
+    // =========================================================
     // UPDATE DRIVER
-public DriverResponse updateDriver(String id, DriverRequest request) {
+    // =========================================================
 
-    Driver driver = driverRepository.findById(id)
-            .orElseThrow(() -> new DriverNotFoundException(id));
+    public DriverResponse updateDriver(
+            String id,
+            DriverRequest request) {
 
-    driver.setName(request.getName());
-    driver.setLicenseNumber(request.getLicenseNumber());
-    driver.setAvailable(request.isAvailable());
-    driver.setServiceArea(request.getServiceArea());
-    driver.setCurrentLocation(request.getCurrentLocation());
-    driver.setVehicle(request.getVehicle());
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(
+                        () -> new DriverNotFoundException(id)
+                );
 
-    Driver updatedDriver = driverRepository.save(driver);
+        driver.setName(request.getName());
+        driver.setLicenseNumber(request.getLicenseNumber());
+        driver.setAvailable(request.isAvailable());
+        driver.setServiceArea(request.getServiceArea());
+        driver.setCurrentLocation(request.getCurrentLocation());
+        driver.setVehicle(request.getVehicle());
 
-    String vehicleRegistrationNumber = null;
+        Driver updatedDriver =
+                driverRepository.save(driver);
 
-    if (updatedDriver.getVehicle() != null) {
-        vehicleRegistrationNumber =
-                updatedDriver.getVehicle().getRegistrationNumber();
+        String vehicleRegistrationNumber = null;
+
+        if (updatedDriver.getVehicle() != null) {
+            vehicleRegistrationNumber =
+                    updatedDriver
+                            .getVehicle()
+                            .getRegistrationNumber();
+        }
+
+        return new DriverResponse(
+                updatedDriver.getId(),
+                updatedDriver.getName(),
+                updatedDriver.getLicenseNumber(),
+                vehicleRegistrationNumber
+        );
     }
 
-    return new DriverResponse(
-            updatedDriver.getId(),
-            updatedDriver.getName(),
-            updatedDriver.getLicenseNumber(),
-            vehicleRegistrationNumber
-    );
-}
 
+    // =========================================================
+    // DELETE DRIVER
+    // =========================================================
 
-// DELETE DRIVER
-public void deleteDriver(String id) {
+    public void deleteDriver(String id) {
 
-    if (!driverRepository.existsById(id)) {
-        throw new DriverNotFoundException(id);
+        if (!driverRepository.existsById(id)) {
+            throw new DriverNotFoundException(id);
+        }
+
+        driverRepository.deleteById(id);
     }
 
-    driverRepository.deleteById(id);
-}
 
-
+    // =========================================================
     // GET DRIVER BY ID
+    // =========================================================
+
     public DriverResponse getDriverById(String id) {
 
         Driver driver = driverRepository.findById(id)
-                .orElseThrow(() -> new DriverNotFoundException(id));
+                .orElseThrow(
+                        () -> new DriverNotFoundException(id)
+                );
 
         String vehicleRegistrationNumber = null;
 
@@ -108,35 +135,72 @@ public void deleteDriver(String id) {
         );
     }
 
-    // GET AVAILABLE DRIVERS
-public List<DriverResponse> getAvailableDrivers(String serviceArea) {
 
-    List<Driver> drivers;
+    // =========================================================
+    // GET FULL DRIVER PROFILE
+    // =========================================================
 
-    if (serviceArea == null || serviceArea.isBlank()) {
-        drivers = driverRepository.findByAvailableTrue();
-    } else {
-        drivers = driverRepository
-                .findByAvailableTrueAndServiceAreaIgnoreCase(serviceArea);
+    public DriverProfileResponse getDriverProfile(String id) {
+
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(
+                        () -> new DriverNotFoundException(id)
+                );
+
+        return new DriverProfileResponse(
+                driver.getId(),
+                driver.getName(),
+                driver.getLicenseNumber(),
+                driver.isAvailable(),
+                driver.getServiceArea(),
+                driver.getCurrentLocation(),
+                driver.getVehicle()
+        );
     }
 
-    return drivers.stream()
-            .map(driver -> {
 
-                String vehicleRegistrationNumber = null;
+    // =========================================================
+    // GET AVAILABLE DRIVERS
+    // =========================================================
 
-                if (driver.getVehicle() != null) {
-                    vehicleRegistrationNumber =
-                            driver.getVehicle().getRegistrationNumber();
-                }
+    public List<DriverResponse> getAvailableDrivers(
+            String serviceArea) {
 
-                return new DriverResponse(
-                        driver.getId(),
-                        driver.getName(),
-                        driver.getLicenseNumber(),
-                        vehicleRegistrationNumber
-                );
-            })
-            .toList();
-}
+        List<Driver> drivers;
+
+        if (serviceArea == null || serviceArea.isBlank()) {
+
+            drivers =
+                    driverRepository.findByAvailableTrue();
+
+        } else {
+
+            drivers =
+                    driverRepository
+                            .findByAvailableTrueAndServiceAreaIgnoreCase(
+                                    serviceArea
+                            );
+        }
+
+        return drivers.stream()
+                .map(driver -> {
+
+                    String vehicleRegistrationNumber = null;
+
+                    if (driver.getVehicle() != null) {
+                        vehicleRegistrationNumber =
+                                driver
+                                        .getVehicle()
+                                        .getRegistrationNumber();
+                    }
+
+                    return new DriverResponse(
+                            driver.getId(),
+                            driver.getName(),
+                            driver.getLicenseNumber(),
+                            vehicleRegistrationNumber
+                    );
+                })
+                .toList();
+    }
 }

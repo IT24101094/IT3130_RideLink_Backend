@@ -1,5 +1,6 @@
 package com.ridelink.driver_vehicle_service.controller;
 
+import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.service.DriverService;
@@ -37,7 +38,11 @@ public class DriverController {
         this.driverService = driverService;
     }
 
+
+    // =========================================================
     // CREATE DRIVER
+    // =========================================================
+
     @Operation(
             summary = "Create a driver",
             description = "Creates a new driver together with vehicle, service area, availability and location information"
@@ -54,7 +59,11 @@ public class DriverController {
                 .body(createdDriver);
     }
 
+
+    // =========================================================
     // UPDATE DRIVER
+    // =========================================================
+
     @Operation(
             summary = "Update a driver",
             description = "Updates an existing driver's operational profile and vehicle information"
@@ -70,7 +79,11 @@ public class DriverController {
         return ResponseEntity.ok(updatedDriver);
     }
 
+
+    // =========================================================
     // DELETE DRIVER
+    // =========================================================
+
     @Operation(
             summary = "Delete a driver",
             description = "Deletes an existing driver using the driver ID"
@@ -81,10 +94,16 @@ public class DriverController {
 
         driverService.deleteDriver(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
+
+    // =========================================================
     // GET AVAILABLE DRIVERS
+    // =========================================================
+
     @Operation(
             summary = "Get available drivers",
             description = "Returns available drivers and optionally filters them by service area"
@@ -99,7 +118,30 @@ public class DriverController {
         return ResponseEntity.ok(drivers);
     }
 
+
+    // =========================================================
+    // GET FULL DRIVER PROFILE
+    // =========================================================
+
+    @Operation(
+            summary = "Get full driver profile",
+            description = "Returns the driver's operational profile including availability, service area, current location and vehicle details"
+    )
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<DriverProfileResponse> getDriverProfile(
+            @PathVariable String id) {
+
+        DriverProfileResponse profile =
+                driverService.getDriverProfile(id);
+
+        return ResponseEntity.ok(profile);
+    }
+
+
+    // =========================================================
     // GET DRIVER BY ID
+    // =========================================================
+
     @Operation(
             summary = "Get driver by ID",
             description = "Returns driver identification and vehicle registration information using the driver ID"
