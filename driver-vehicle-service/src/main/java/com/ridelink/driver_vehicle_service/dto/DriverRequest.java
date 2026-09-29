@@ -2,19 +2,30 @@ package com.ridelink.driver_vehicle_service.dto;
 
 import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.model.Vehicle;
+import jakarta.validation.constraints.NotBlank;
 
 public class DriverRequest {
 
+    @NotBlank(message = "Driver name is required")
     private String name;
+
+    @NotBlank(message = "License number is required")
     private String licenseNumber;
+
     private boolean available;
+
+    @NotBlank(message = "Service area is required")
     private String serviceArea;
+
     private Location currentLocation;
+
     private Vehicle vehicle;
 
+    // Default constructor
     public DriverRequest() {
     }
 
+    // Full constructor
     public DriverRequest(
             String name,
             String licenseNumber,
@@ -22,6 +33,7 @@ public class DriverRequest {
             String serviceArea,
             Location currentLocation,
             Vehicle vehicle) {
+
         this.name = name;
         this.licenseNumber = licenseNumber;
         this.available = available;
@@ -30,6 +42,7 @@ public class DriverRequest {
         this.vehicle = vehicle;
     }
 
+    // Name
     public String getName() {
         return name;
     }
@@ -38,6 +51,7 @@ public class DriverRequest {
         this.name = name;
     }
 
+    // License Number
     public String getLicenseNumber() {
         return licenseNumber;
     }
@@ -46,6 +60,7 @@ public class DriverRequest {
         this.licenseNumber = licenseNumber;
     }
 
+    // Availability
     public boolean isAvailable() {
         return available;
     }
@@ -54,6 +69,7 @@ public class DriverRequest {
         this.available = available;
     }
 
+    // Service Area
     public String getServiceArea() {
         return serviceArea;
     }
@@ -62,6 +78,7 @@ public class DriverRequest {
         this.serviceArea = serviceArea;
     }
 
+    // Current Location
     public Location getCurrentLocation() {
         return currentLocation;
     }
@@ -70,6 +87,7 @@ public class DriverRequest {
         this.currentLocation = currentLocation;
     }
 
+    // Vehicle
     public Vehicle getVehicle() {
         return vehicle;
     }
