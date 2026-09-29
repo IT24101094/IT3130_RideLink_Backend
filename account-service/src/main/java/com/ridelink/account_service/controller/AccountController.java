@@ -26,4 +26,16 @@ public class AccountController {
         PassengerDto passengerDto = accountService.getPassengerById(id);
         return ResponseEntity.ok(passengerDto);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PassengerDto> updatePassenger(@PathVariable String id, @Valid @RequestBody PassengerDto passengerDto) {
+        PassengerDto updatedPassenger = accountService.updatePassenger(id, passengerDto);
+        return ResponseEntity.ok(updatedPassenger);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePassenger(@PathVariable String id) {
+        accountService.deletePassenger(id);
+        return ResponseEntity.noContent().build();
+    }
 }

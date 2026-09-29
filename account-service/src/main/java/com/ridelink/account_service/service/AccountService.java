@@ -66,4 +66,36 @@ public class AccountService {
             throw new ResourceNotFoundException("Passenger not found with id: " + id);
         }
     }
+
+    public PassengerDto updatePassenger(String id, PassengerDto dto) {
+        Passenger existingPassenger = passengerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Passenger not found with id: " + id));
+
+        existingPassenger.setName(dto.getName());
+        existingPassenger.setEmail(dto.getEmail());
+        existingPassenger.setPhoneNumber(dto.getPhoneNumber());
+        existingPassenger.setNic(dto.getNic());
+        existingPassenger.setAddress(dto.getAddress());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            existingPassenger.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        Passenger savedPassenger = passengerRepository.save(existingPassenger);
+        return new PassengerDto(
+                savedPassenger.getId(),
+                savedPassenger.getName(),
+                savedPassenger.getEmail(),
+                savedPassenger.getPassword(),
+                savedPassenger.getPhoneNumber(),
+                savedPassenger.getNic(),
+                savedPassenger.getAddress()
+        );
+    }
+
+    public void deletePassenger(String id) {
+        Passenger existingPassenger = passengerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Passenger not found with id: " + id));
+        passengerRepository.delete(existingPassenger);
+    }
 }
