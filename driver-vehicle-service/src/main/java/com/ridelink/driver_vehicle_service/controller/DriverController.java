@@ -3,7 +3,7 @@ package com.ridelink.driver_vehicle_service.controller;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.service.DriverService;
-
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,7 +31,7 @@ public class DriverController {
     // CREATE DRIVER
     @PostMapping
     public ResponseEntity<DriverResponse> createDriver(
-            @RequestBody DriverRequest request) {
+            @Valid @RequestBody DriverRequest request) {
 
         DriverResponse createdDriver =
                 driverService.createDriver(request);
@@ -45,7 +45,7 @@ public class DriverController {
     @PutMapping("/{id}")
     public ResponseEntity<DriverResponse> updateDriver(
             @PathVariable String id,
-            @RequestBody DriverRequest request) {
+            @Valid @RequestBody DriverRequest request) {
 
         DriverResponse updatedDriver =
                 driverService.updateDriver(id, request);
