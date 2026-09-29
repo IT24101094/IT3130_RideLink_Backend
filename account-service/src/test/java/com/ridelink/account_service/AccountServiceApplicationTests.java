@@ -54,4 +54,72 @@ class AccountServiceApplicationTests {
                 .andExpect(jsonPath("$.messages.nic").value("NIC is required"))
                 .andExpect(jsonPath("$.messages.address").value("Address is required"));
     }
+
+    @Test
+    void shouldRejectInvalidLoginPayload() throws Exception {
+        String invalidLoginJson = """
+                {
+                    "email": "not-an-email",
+                    "password": ""
+                }
+                """;
+
+        mockMvc.perform(post("/api/passengers/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidLoginJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation Failed"))
+                .andExpect(jsonPath("$.messages.email").value("Invalid email format"))
+                .andExpect(jsonPath("$.messages.password").value("Password is required"));
+    }
+
+    @Test
+    void shouldFailLoginWhenUserNotFound() throws Exception {
+        String loginJson = """
+                {
+                    "email": "nonexistent@example.com",
+                    "password": "wrongpassword"
+                }
+                """;
+
+        mockMvc.perform(post("/api/passengers/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+    }
+
+    @Test
+    void shouldLoginSuccessfullyAndReturnJwt() throws Exception {
+        String uniqueEmail = "jwtuser" + System.currentTimeMillis() + "@example.com";
+        String registerJson = String.format("""
+                {
+                    "name": "JWT Test User",
+                    "email": "%s",
+                    "password": "SecurePassword123",
+                    "phoneNumber": "0771234567",
+                    "nic": "200012345678",
+                    "address": "123 Main Street"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/passengers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registerJson))
+                .andExpect(status().isCreated());
+
+        String loginJson = String.format("""
+                {
+                    "email": "%s",
+                    "password": "SecurePassword123"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/passengers/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isString());
+    }
 }

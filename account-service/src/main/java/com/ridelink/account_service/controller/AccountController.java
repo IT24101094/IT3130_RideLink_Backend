@@ -1,5 +1,7 @@
 package com.ridelink.account_service.controller;
 
+import com.ridelink.account_service.dto.LoginRequest;
+import com.ridelink.account_service.dto.LoginResponse;
 import com.ridelink.account_service.dto.PassengerDto;
 import com.ridelink.account_service.service.AccountService;
 import jakarta.validation.Valid;
@@ -14,6 +16,12 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        LoginResponse response = accountService.login(loginRequest);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<PassengerDto> createPassenger(@Valid @RequestBody PassengerDto passengerDto) {
