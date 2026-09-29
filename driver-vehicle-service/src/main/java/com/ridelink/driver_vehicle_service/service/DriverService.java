@@ -1,5 +1,6 @@
 package com.ridelink.driver_vehicle_service.service;
 
+import java.util.List;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
@@ -106,4 +107,36 @@ public void deleteDriver(String id) {
                 vehicleRegistrationNumber
         );
     }
+
+    // GET AVAILABLE DRIVERS
+public List<DriverResponse> getAvailableDrivers(String serviceArea) {
+
+    List<Driver> drivers;
+
+    if (serviceArea == null || serviceArea.isBlank()) {
+        drivers = driverRepository.findByAvailableTrue();
+    } else {
+        drivers = driverRepository
+                .findByAvailableTrueAndServiceAreaIgnoreCase(serviceArea);
+    }
+
+    return drivers.stream()
+            .map(driver -> {
+
+                String vehicleRegistrationNumber = null;
+
+                if (driver.getVehicle() != null) {
+                    vehicleRegistrationNumber =
+                            driver.getVehicle().getRegistrationNumber();
+                }
+
+                return new DriverResponse(
+                        driver.getId(),
+                        driver.getName(),
+                        driver.getLicenseNumber(),
+                        vehicleRegistrationNumber
+                );
+            })
+            .toList();
+}
 }
