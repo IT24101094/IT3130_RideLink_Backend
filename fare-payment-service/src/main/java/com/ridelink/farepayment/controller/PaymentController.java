@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ridelink.farepayment.model.Payment;
 import com.ridelink.farepayment.service.PaymentService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
@@ -24,10 +26,9 @@ public class PaymentController {
     // Process payment
     @PostMapping
     public ResponseEntity<Payment> processPayment(
-            @RequestBody Payment payment) {
+            @Valid @RequestBody Payment payment) {
 
-        Payment processedPayment =
-                paymentService.processPayment(payment);
+        Payment processedPayment = paymentService.processPayment(payment);
 
         return ResponseEntity.ok(processedPayment);
     }
@@ -44,7 +45,7 @@ public class PaymentController {
 
     // Get payment receipt
     @GetMapping("/{id}/receipt")
-    public ResponseEntity<Payment> getReceipt(
+    public ResponseEntity<Payment> getPaymentReceipt(
             @PathVariable String id) {
 
         Payment payment = paymentService.getPaymentById(id);
