@@ -1,6 +1,7 @@
 package com.ridelink.account_service.service;
 
 import com.ridelink.account_service.dto.PassengerDto;
+import com.ridelink.account_service.exception.ResourceNotFoundException;
 import com.ridelink.account_service.model.Passenger;
 import com.ridelink.account_service.repository.PassengerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,7 @@ public class AccountService {
                     p.getAddress()
             );
         } else {
-            throw new RuntimeException("Passenger not found with id: " + id);
+            throw new ResourceNotFoundException("Passenger not found with id: " + id);
         }
     }
 }
