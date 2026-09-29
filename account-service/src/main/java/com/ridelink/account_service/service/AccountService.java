@@ -1,9 +1,13 @@
 package com.ridelink.account_service.service;
 
+import com.ridelink.account_service.dto.LoginRequest;
+import com.ridelink.account_service.dto.LoginResponse;
 import com.ridelink.account_service.dto.PassengerDto;
+import com.ridelink.account_service.exception.InvalidCredentialsException;
 import com.ridelink.account_service.exception.ResourceNotFoundException;
 import com.ridelink.account_service.model.Passenger;
 import com.ridelink.account_service.repository.PassengerRepository;
+import com.ridelink.account_service.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,21 @@ public class AccountService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public LoginResponse login(LoginRequest request) {
+        Passenger passenger = passengerRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), passenger.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        String token = jwtUtil.generateToken(passenger.getEmail());
+        return new LoginResponse(token);
+    }
 
     public PassengerDto createPassenger(PassengerDto passengerDto) {
         String hashedPassword = passengerDto.getPassword() != null
