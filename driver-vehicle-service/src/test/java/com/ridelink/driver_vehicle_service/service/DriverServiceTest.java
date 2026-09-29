@@ -1,6 +1,7 @@
 package com.ridelink.driver_vehicle_service.service;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -601,6 +602,104 @@ class DriverServiceTest {
         // Verify the actual Driver object was changed
         assertFalse(
                 testDriver.isAvailable()
+        );
+
+        // Verify repository interactions
+        verify(driverRepository, times(1))
+                .findById("DRV001");
+
+        verify(driverRepository, times(1))
+                .save(testDriver);
+    }
+
+
+    // =========================================================
+    // TEST 11 - UPDATE DRIVER LOCATION
+    // =========================================================
+
+    @Test
+    void shouldUpdateDriverLocationSuccessfully() {
+
+        // Arrange
+        DriverLocationRequest request =
+                new DriverLocationRequest(
+                        6.9350,
+                        79.8500
+                );
+
+        when(driverRepository.findById("DRV001"))
+                .thenReturn(Optional.of(testDriver));
+
+        when(driverRepository.save(any(Driver.class)))
+                .thenAnswer(invocation ->
+                        invocation.getArgument(0));
+
+        // Act
+        DriverProfileResponse response =
+                driverService.updateDriverLocation(
+                        "DRV001",
+                        request
+                );
+
+        // Assert
+        assertNotNull(response);
+
+        assertEquals(
+                "DRV001",
+                response.getId()
+        );
+
+        assertEquals(
+                "Nimal Perera",
+                response.getName()
+        );
+
+        assertNotNull(
+                response.getCurrentLocation()
+        );
+
+        assertEquals(
+                6.9350,
+                response.getCurrentLocation().getLatitude()
+        );
+
+        assertEquals(
+                79.8500,
+                response.getCurrentLocation().getLongitude()
+        );
+
+        // Verify the Driver entity itself was updated
+        assertNotNull(
+                testDriver.getCurrentLocation()
+        );
+
+        assertEquals(
+                6.9350,
+                testDriver.getCurrentLocation().getLatitude()
+        );
+
+        assertEquals(
+                79.8500,
+                testDriver.getCurrentLocation().getLongitude()
+        );
+
+        // Ensure unrelated driver data remains unchanged
+        assertEquals(
+                "Colombo",
+                response.getServiceArea()
+        );
+
+        assertTrue(
+                response.isAvailable()
+        );
+
+        assertNotNull(
+                response.getVehicle()
+        );
+
+        assertEquals(
+                "CAB-1234",
+                response.getVehicle().getRegistrationNumber()
         );
 
         // Verify repository interactions
