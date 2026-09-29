@@ -1,0 +1,461 @@
+{
+  "info": {
+    "_postman_id": "ridelink-driver-vehicle-service",
+    "name": "RideLink - Driver & Vehicle Service",
+    "description": "Postman collection for testing the RideLink Driver & Vehicle microservice running on port 8082.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "driverId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Create Driver",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Nimal Perera\",\n  \"licenseNumber\": \"B1234567\",\n  \"available\": true,\n  \"serviceArea\": \"Colombo\",\n  \"currentLocation\": {\n    \"latitude\": 6.9271,\n    \"longitude\": 79.8612\n  },\n  \"vehicle\": {\n    \"registrationNumber\": \"CAB-1234\",\n    \"make\": \"Toyota\",\n    \"model\": \"Prius\",\n    \"type\": \"Car\",\n    \"color\": \"White\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers"
+          ]
+        },
+        "description": "Creates a new driver and vehicle profile."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Driver ID is returned\", function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.id).to.exist;",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "if (response.id) {",
+              "    pm.collectionVariables.set(\"driverId\", response.id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Get Driver Integration View",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}"
+          ]
+        },
+        "description": "Returns the compact driver response used for inter-service communication."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Integration response contains required fields\", function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property(\"id\");",
+              "    pm.expect(response).to.have.property(\"name\");",
+              "    pm.expect(response).to.have.property(\"licenseNumber\");",
+              "    pm.expect(response).to.have.property(\"vehicleRegistrationNumber\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Get Full Driver Profile",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}",
+            "profile"
+          ]
+        },
+        "description": "Returns the driver's complete operational profile."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Full driver profile is returned\", function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property(\"available\");",
+              "    pm.expect(response).to.have.property(\"serviceArea\");",
+              "    pm.expect(response).to.have.property(\"currentLocation\");",
+              "    pm.expect(response).to.have.property(\"vehicle\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Get All Available Drivers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/available",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "available"
+          ]
+        },
+        "description": "Returns all currently available drivers."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is an array\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Get Available Drivers by Service Area",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/available?serviceArea=Colombo",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "available"
+          ],
+          "query": [
+            {
+              "key": "serviceArea",
+              "value": "Colombo"
+            }
+          ]
+        },
+        "description": "Returns available drivers operating in Colombo."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is an array\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Update Driver",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Nimal Perera\",\n  \"licenseNumber\": \"B1234567\",\n  \"available\": true,\n  \"serviceArea\": \"Colombo\",\n  \"currentLocation\": {\n    \"latitude\": 6.9300,\n    \"longitude\": 79.8600\n  },\n  \"vehicle\": {\n    \"registrationNumber\": \"CAB-1234\",\n    \"make\": \"Toyota\",\n    \"model\": \"Prius\",\n    \"type\": \"Car\",\n    \"color\": \"Silver\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}"
+          ]
+        },
+        "description": "Updates an existing driver and vehicle profile."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Set Driver Unavailable",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"available\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}/availability",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}",
+            "availability"
+          ]
+        },
+        "description": "Changes the driver's operational availability."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Driver is unavailable\", function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.available).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Verify Unavailable Driver Filtering",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/available?serviceArea=Colombo",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "available"
+          ],
+          "query": [
+            {
+              "key": "serviceArea",
+              "value": "Colombo"
+            }
+          ]
+        },
+        "description": "Verifies that the driver marked unavailable is excluded from eligible available drivers."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Unavailable driver is excluded\", function () {",
+              "    const drivers = pm.response.json();",
+              "    const driverId = pm.collectionVariables.get(\"driverId\");",
+              "    const found = drivers.some(driver => driver.id === driverId);",
+              "    pm.expect(found).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Set Driver Available",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"available\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}/availability",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}",
+            "availability"
+          ]
+        },
+        "description": "Restores the driver's availability."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Driver is available\", function () {",
+              "    pm.expect(pm.response.json().available).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Delete Driver",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}"
+          ]
+        },
+        "description": "Deletes the test driver."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Verify Deleted Driver Returns 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/{{driverId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "{{driverId}}"
+          ]
+        },
+        "description": "Confirms that the deleted driver can no longer be retrieved."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
