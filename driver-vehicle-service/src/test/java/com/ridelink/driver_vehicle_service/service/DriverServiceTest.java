@@ -1,9 +1,11 @@
 package com.ridelink.driver_vehicle_service.service;
 
+import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
 import com.ridelink.driver_vehicle_service.model.Driver;
+import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.model.Vehicle;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 
@@ -30,12 +32,18 @@ class DriverServiceTest {
 
     private Driver testDriver;
 
+
+    // =========================================================
+    // SETUP
+    // =========================================================
+
     @BeforeEach
     void setUp() {
 
         driverService = new DriverService(driverRepository);
 
         Vehicle vehicle = new Vehicle();
+
         vehicle.setRegistrationNumber("CAB-1234");
         vehicle.setMake("Toyota");
         vehicle.setModel("Prius");
@@ -43,6 +51,7 @@ class DriverServiceTest {
         vehicle.setColor("White");
 
         testDriver = new Driver();
+
         testDriver.setId("DRV001");
         testDriver.setName("Nimal Perera");
         testDriver.setLicenseNumber("B1234567");
@@ -426,5 +435,101 @@ class DriverServiceTest {
                 driverRepository,
                 never()
         ).deleteById(anyString());
+    }
+
+
+    // =========================================================
+    // TEST 9 - GET FULL DRIVER PROFILE
+    // =========================================================
+
+    @Test
+    void shouldReturnFullDriverProfile() {
+
+        Location location = new Location();
+
+        location.setLatitude(6.9271);
+        location.setLongitude(79.8612);
+
+        testDriver.setCurrentLocation(location);
+
+        when(driverRepository.findById("DRV001"))
+                .thenReturn(Optional.of(testDriver));
+
+        DriverProfileResponse response =
+                driverService.getDriverProfile("DRV001");
+
+        assertNotNull(response);
+
+        assertEquals(
+                "DRV001",
+                response.getId()
+        );
+
+        assertEquals(
+                "Nimal Perera",
+                response.getName()
+        );
+
+        assertEquals(
+                "B1234567",
+                response.getLicenseNumber()
+        );
+
+        assertTrue(
+                response.isAvailable()
+        );
+
+        assertEquals(
+                "Colombo",
+                response.getServiceArea()
+        );
+
+        // Check current location
+        assertNotNull(
+                response.getCurrentLocation()
+        );
+
+        assertEquals(
+                6.9271,
+                response.getCurrentLocation().getLatitude()
+        );
+
+        assertEquals(
+                79.8612,
+                response.getCurrentLocation().getLongitude()
+        );
+
+        // Check vehicle information
+        assertNotNull(
+                response.getVehicle()
+        );
+
+        assertEquals(
+                "CAB-1234",
+                response.getVehicle().getRegistrationNumber()
+        );
+
+        assertEquals(
+                "Toyota",
+                response.getVehicle().getMake()
+        );
+
+        assertEquals(
+                "Prius",
+                response.getVehicle().getModel()
+        );
+
+        assertEquals(
+                "Car",
+                response.getVehicle().getType()
+        );
+
+        assertEquals(
+                "White",
+                response.getVehicle().getColor()
+        );
+
+        verify(driverRepository, times(1))
+                .findById("DRV001");
     }
 }
