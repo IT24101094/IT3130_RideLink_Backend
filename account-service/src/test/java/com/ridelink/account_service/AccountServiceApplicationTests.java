@@ -23,6 +23,13 @@ class AccountServiceApplicationTests {
     }
 
     @Test
+    void testApiDocs() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/v3/api-docs"))
+                .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void shouldRejectInvalidPassengerData() throws Exception {
         String invalidPassengerJson = """
                 {
