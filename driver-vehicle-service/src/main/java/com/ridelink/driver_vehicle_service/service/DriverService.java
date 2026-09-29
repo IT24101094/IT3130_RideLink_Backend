@@ -1,11 +1,13 @@
 package com.ridelink.driver_vehicle_service.service;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
 import com.ridelink.driver_vehicle_service.model.Driver;
+import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 
 import org.springframework.stereotype.Service;
@@ -110,6 +112,41 @@ public class DriverService {
                 );
 
         driver.setAvailable(request.isAvailable());
+
+        Driver updatedDriver =
+                driverRepository.save(driver);
+
+        return new DriverProfileResponse(
+                updatedDriver.getId(),
+                updatedDriver.getName(),
+                updatedDriver.getLicenseNumber(),
+                updatedDriver.isAvailable(),
+                updatedDriver.getServiceArea(),
+                updatedDriver.getCurrentLocation(),
+                updatedDriver.getVehicle()
+        );
+    }
+
+
+    // =========================================================
+    // UPDATE DRIVER LOCATION
+    // =========================================================
+
+    public DriverProfileResponse updateDriverLocation(
+            String id,
+            DriverLocationRequest request) {
+
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(
+                        () -> new DriverNotFoundException(id)
+                );
+
+        Location updatedLocation = new Location(
+                request.getLatitude(),
+                request.getLongitude()
+        );
+
+        driver.setCurrentLocation(updatedLocation);
 
         Driver updatedDriver =
                 driverRepository.save(driver);

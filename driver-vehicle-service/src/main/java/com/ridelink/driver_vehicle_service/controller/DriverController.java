@@ -1,6 +1,7 @@
 package com.ridelink.driver_vehicle_service.controller;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -30,7 +31,7 @@ import java.util.List;
 @RequestMapping("/api/drivers")
 @Tag(
         name = "Driver & Vehicle Management",
-        description = "APIs for managing drivers, vehicles, availability and service areas"
+        description = "APIs for managing drivers, vehicles, availability, service areas and simulated current locations"
 )
 public class DriverController {
 
@@ -97,6 +98,29 @@ public class DriverController {
 
         DriverProfileResponse updatedDriver =
                 driverService.updateDriverAvailability(
+                        id,
+                        request
+                );
+
+        return ResponseEntity.ok(updatedDriver);
+    }
+
+
+    // =========================================================
+    // UPDATE DRIVER LOCATION
+    // =========================================================
+
+    @Operation(
+            summary = "Update driver location",
+            description = "Updates the simulated current location of an existing driver"
+    )
+    @PatchMapping("/{id}/location")
+    public ResponseEntity<DriverProfileResponse> updateDriverLocation(
+            @PathVariable String id,
+            @Valid @RequestBody DriverLocationRequest request) {
+
+        DriverProfileResponse updatedDriver =
+                driverService.updateDriverLocation(
                         id,
                         request
                 );
