@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ridelink.farepayment.dto.PaymentRequestDto;
 import com.ridelink.farepayment.model.Payment;
 import com.ridelink.farepayment.service.PaymentService;
 
@@ -26,7 +27,16 @@ public class PaymentController {
     // Process payment
     @PostMapping
     public ResponseEntity<Payment> processPayment(
-            @Valid @RequestBody Payment payment) {
+            @Valid @RequestBody PaymentRequestDto request) {
+
+        Payment payment = new Payment();
+
+        payment.setOrderId(request.getOrderId());
+        payment.setRideId(request.getRideId());
+        payment.setUserId(request.getUserId());
+        payment.setAmount(request.getAmount());
+        payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setPaymentStatus(request.getPaymentStatus());
 
         Payment processedPayment = paymentService.processPayment(payment);
 
