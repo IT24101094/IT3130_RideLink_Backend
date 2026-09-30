@@ -14,10 +14,26 @@ public class PaymentService {
         this.paymentRepository = paymentRepository;
     }
 
+    // Process and save payment
     public Payment processPayment(Payment payment) {
 
         payment.setPaymentStatus("SUCCESS");
 
         return paymentRepository.save(payment);
+    }
+
+    // Get payment by ID
+    public Payment getPaymentById(String id) {
+
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Payment not found: " + id));
+    }
+
+    // Get payment status
+    public String getPaymentStatus(String id) {
+
+        Payment payment = getPaymentById(id);
+
+        return payment.getPaymentStatus();
     }
 }

@@ -4,26 +4,45 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+
 @Document(collection = "payments")
 public class Payment {
 
     @Id
     private String id;
 
+    @NotBlank(message = "Order ID is required")
     @Field("order_id")
     private String orderId;
 
+    @NotBlank(message = "Ride ID is required")
     private String rideId;
+
+    @NotBlank(message = "User ID is required")
     private String userId;
+
+    @Positive(message = "Amount must be greater than 0")
     private double amount;
+
+    @NotBlank(message = "Payment method is required")
     private String paymentMethod;
+
+    @NotBlank(message = "Payment status is required")
     private String paymentStatus;
 
     public Payment() {
     }
 
-    public Payment(String orderId, String rideId, String userId, double amount,
-                   String paymentMethod, String paymentStatus) {
+    public Payment(
+            String orderId,
+            String rideId,
+            String userId,
+            double amount,
+            String paymentMethod,
+            String paymentStatus) {
+
         this.orderId = orderId;
         this.rideId = rideId;
         this.userId = userId;
