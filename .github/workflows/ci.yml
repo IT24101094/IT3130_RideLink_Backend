@@ -10,6 +10,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
     steps:
     - uses: actions/checkout@v4
 
@@ -21,17 +27,25 @@ jobs:
         cache: 'maven'
 
     - name: Build and Test Account Service
-      run: mvn clean test -Dspring.data.mongodb.uri=mongodb://localhost:27017/account_db
+      run: mvn clean test
       working-directory: ./account-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/account_db
 
     - name: Build and Test Driver & Vehicle Service
-      run: mvn clean test -Dspring.data.mongodb.uri=mongodb://localhost:27017/driver_db
+      run: mvn clean test
       working-directory: ./driver-vehicle-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/driver_db
 
     - name: Build and Test Ride Management Service
-      run: mvn clean test -Dspring.data.mongodb.uri=mongodb://localhost:27017/ride_db
+      run: mvn clean test
       working-directory: ./ride-management-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/ride_db
 
     - name: Build and Test Fare & Payment Service
-      run: mvn clean test -Dspring.data.mongodb.uri=mongodb://localhost:27017/payment_db
+      run: mvn clean test
       working-directory: ./fare-payment-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/payment_db
