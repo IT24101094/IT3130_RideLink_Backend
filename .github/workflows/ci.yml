@@ -2,7 +2,7 @@ name: RideLink CI Pipeline
 
 on:
   push:
-    branches: [ "main", "master", "dev" ]
+    branches: [ "main", "master", "dev", "feature/*" ]
   pull_request:
     branches: [ "main", "master", "dev" ]
 
@@ -20,5 +20,18 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
-    - name: Build and Test with Maven
+    - name: Build and Test Account Service
       run: mvn clean test
+      working-directory: ./account-service
+
+    - name: Build and Test Driver & Vehicle Service
+      run: mvn clean test
+      working-directory: ./driver-vehicle-service
+
+    - name: Build and Test Ride Management Service
+      run: mvn clean test
+      working-directory: ./ride-management-service
+
+    - name: Build and Test Fare & Payment Service
+      run: mvn clean test
+      working-directory: ./fare-payment-service
