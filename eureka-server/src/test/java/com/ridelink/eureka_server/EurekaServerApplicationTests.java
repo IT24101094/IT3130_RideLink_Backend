@@ -1,11 +1,10 @@
-package com.ridelink.driver_vehicle_service;
+package com.ridelink.eureka_server;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-
 @SpringBootTest
-class DriverVehicleServiceApplicationTests {
+class EurekaServerApplicationTests {
 
 	@Test
 	void contextLoads() {
