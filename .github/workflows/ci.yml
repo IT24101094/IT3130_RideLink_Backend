@@ -13,25 +13,33 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up JDK 21
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: '17'
         distribution: 'temurin'
         cache: 'maven'
 
     - name: Build and Test Account Service
       run: mvn clean test
       working-directory: ./account-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/account_db
 
     - name: Build and Test Driver & Vehicle Service
       run: mvn clean test
       working-directory: ./driver-vehicle-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/driver_db
 
     - name: Build and Test Ride Management Service
       run: mvn clean test
       working-directory: ./ride-management-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/ride_db
 
     - name: Build and Test Fare & Payment Service
       run: mvn clean test
       working-directory: ./fare-payment-service
+      env:
+        SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/payment_db
