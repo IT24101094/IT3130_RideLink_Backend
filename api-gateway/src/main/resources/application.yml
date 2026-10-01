@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: account-service
+              uri: lb://ACCOUNT-SERVICE
+              predicates:
+                - Path=/api/passengers/**, /api/accounts/**
+            - id: driver-vehicle-service
+              uri: lb://DRIVER-VEHICLE-SERVICE
+              predicates:
+                - Path=/api/drivers/**, /api/vehicles/**
+            - id: ride-management-service
+              uri: lb://RIDE-MANAGEMENT-SERVICE
+              predicates:
+                - Path=/api/rides/**
+            - id: fare-payment-service
+              uri: lb://FARE-PAYMENT-SERVICE
+              predicates:
+                - Path=/api/fares/**, /api/payments/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
