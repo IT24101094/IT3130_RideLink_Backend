@@ -5,7 +5,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 
 @Document(collection = "payments")
 public class Payment {
@@ -13,24 +12,26 @@ public class Payment {
     @Id
     private String id;
 
-    @NotBlank(message = "Order ID is required")
     @Field("order_id")
     private String orderId;
 
     @NotBlank(message = "Ride ID is required")
     private String rideId;
 
-    @NotBlank(message = "User ID is required")
+    private String passengerId;
+
     private String userId;
 
-    @Positive(message = "Amount must be greater than 0")
+    private double fareAmount;
+
     private double amount;
 
     @NotBlank(message = "Payment method is required")
     private String paymentMethod;
 
-    @NotBlank(message = "Payment status is required")
     private String paymentStatus;
+
+    private String transactionId;
 
     public Payment() {
     }
@@ -38,21 +39,38 @@ public class Payment {
     public Payment(
             String orderId,
             String rideId,
-            String userId,
-            double amount,
+            String passengerId,
+            double fareAmount,
             String paymentMethod,
-            String paymentStatus) {
-
+            String paymentStatus,
+            String transactionId) {
         this.orderId = orderId;
         this.rideId = rideId;
-        this.userId = userId;
-        this.amount = amount;
+        this.passengerId = passengerId;
+        this.userId = passengerId;
+        this.fareAmount = fareAmount;
+        this.amount = fareAmount;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = paymentStatus;
+        this.transactionId = transactionId;
+    }
+
+    public Payment(
+            String orderId,
+            String rideId,
+            String passengerId,
+            double fareAmount,
+            String paymentMethod,
+            String paymentStatus) {
+        this(orderId, rideId, passengerId, fareAmount, paymentMethod, paymentStatus, null);
     }
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getOrderId() {
@@ -71,20 +89,38 @@ public class Payment {
         this.rideId = rideId;
     }
 
+    public String getPassengerId() {
+        return passengerId != null ? passengerId : userId;
+    }
+
+    public void setPassengerId(String passengerId) {
+        this.passengerId = passengerId;
+        this.userId = passengerId;
+    }
+
     public String getUserId() {
-        return userId;
+        return getPassengerId();
     }
 
     public void setUserId(String userId) {
-        this.userId = userId;
+        setPassengerId(userId);
+    }
+
+    public double getFareAmount() {
+        return fareAmount > 0 ? fareAmount : amount;
+    }
+
+    public void setFareAmount(double fareAmount) {
+        this.fareAmount = fareAmount;
+        this.amount = fareAmount;
     }
 
     public double getAmount() {
-        return amount;
+        return getFareAmount();
     }
 
     public void setAmount(double amount) {
-        this.amount = amount;
+        setFareAmount(amount);
     }
 
     public String getPaymentMethod() {
@@ -101,5 +137,13 @@ public class Payment {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 }

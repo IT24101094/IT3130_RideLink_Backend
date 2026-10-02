@@ -33,8 +33,8 @@ public class PaymentController {
 
         payment.setOrderId(request.getOrderId());
         payment.setRideId(request.getRideId());
-        payment.setUserId(request.getUserId());
-        payment.setAmount(request.getAmount());
+        payment.setPassengerId(request.getPassengerId());
+        payment.setFareAmount(request.getFareAmount());
         payment.setPaymentMethod(request.getPaymentMethod());
         payment.setPaymentStatus(request.getPaymentStatus());
 

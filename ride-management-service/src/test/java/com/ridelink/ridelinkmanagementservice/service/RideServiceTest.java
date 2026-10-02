@@ -105,21 +105,25 @@ class RideServiceTest {
         Ride updated = rideService.startRide("ride123");
 
         assertEquals(RideStatus.IN_PROGRESS, updated.getStatus());
+        assertNotNull(updated.getStartTime());
         verify(rideRepository).save(sampleRide);
     }
 
     @Test
     void completeRide_Success() {
+        sampleRide.setPaymentMethod("CARD");
         when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
         when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(farePaymentServiceClient.calculateFare("ride123")).thenReturn("Mock Fare Calculation Triggered");
+        when(farePaymentServiceClient.calculateFare("ride123", "CARD")).thenReturn("{\"finalFare\": 700.0}");
 
         Ride updated = rideService.completeRide("ride123");
 
         assertEquals(RideStatus.COMPLETED, updated.getStatus());
         assertNotNull(updated.getCompletedTime());
-        verify(farePaymentServiceClient).calculateFare("ride123");
-        verify(rideRepository).save(sampleRide);
+        assertEquals(700.0, updated.getFinalFare());
+        assertEquals("CARD", updated.getPaymentMethod());
+        verify(farePaymentServiceClient).calculateFare("ride123", "CARD");
+        verify(rideRepository, times(2)).save(sampleRide);
     }
 
     @Test

@@ -35,7 +35,11 @@ public class Ride {
 
     private Double finalFare;
 
+    private String paymentMethod;
+
     private LocalDateTime requestedTime;
+
+    private LocalDateTime startTime;
 
     private LocalDateTime completedTime;
 }

@@ -16,6 +16,9 @@ import com.ridelink.farepayment.model.Payment;
 import com.ridelink.farepayment.repository.PaymentRepository;
 import com.ridelink.farepayment.service.PaymentService;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class FarePaymentServiceApplicationTests {
 
     private PaymentRepository paymentRepository;
@@ -28,7 +31,7 @@ class FarePaymentServiceApplicationTests {
     }
 
     @Test
-    void processPayment_shouldSetStatusToSuccessAndSavePayment() {
+    void processPayment_shouldSetStatusToPaidWithTransactionIdForCard() {
 
         Payment payment = new Payment(
                 "ORDER001",
@@ -43,7 +46,34 @@ class FarePaymentServiceApplicationTests {
 
         Payment result = paymentService.processPayment(payment);
 
-        assertEquals("SUCCESS", result.getPaymentStatus());
+        assertEquals("PAID", result.getPaymentStatus());
+        assertNotNull(result.getTransactionId());
+        assertTrue(result.getFareAmount() >= 400.0 && result.getFareAmount() <= 2500.0);
+        assertEquals(result.getFareAmount(), Math.round(result.getFareAmount() * 100.0) / 100.0);
+
+        verify(paymentRepository, times(1)).save(payment);
+    }
+
+    @Test
+    void processPayment_shouldSetStatusToPaidWithNullTransactionIdForCash() {
+
+        Payment payment = new Payment(
+                "ORDER002",
+                "RIDE002",
+                "USER002",
+                0.0,
+                "CASH",
+                "PENDING"
+        );
+
+        when(paymentRepository.save(payment)).thenReturn(payment);
+
+        Payment result = paymentService.processPayment(payment);
+
+        assertEquals("PAID", result.getPaymentStatus());
+        assertTrue(result.getFareAmount() >= 400.0 && result.getFareAmount() <= 2500.0);
+        assertEquals(result.getFareAmount(), Math.round(result.getFareAmount() * 100.0) / 100.0);
+        assertNull(result.getTransactionId());
 
         verify(paymentRepository, times(1)).save(payment);
     }

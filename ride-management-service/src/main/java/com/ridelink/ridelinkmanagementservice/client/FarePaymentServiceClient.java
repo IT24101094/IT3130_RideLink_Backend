@@ -8,5 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface FarePaymentServiceClient {
 
     @PostMapping("/api/fares/calculate")
-    String calculateFare(@RequestParam("rideId") String rideId);
+    String calculateFare(
+            @RequestParam("rideId") String rideId,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod);
 }

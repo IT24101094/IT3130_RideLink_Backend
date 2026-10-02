@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 public class FarePaymentServiceClientFallback implements FarePaymentServiceClient {
 
     @Override
-    public String calculateFare(String rideId) {
+    public String calculateFare(String rideId, String paymentMethod) {
         return "Mock Fare Calculation Triggered";
     }
 }
