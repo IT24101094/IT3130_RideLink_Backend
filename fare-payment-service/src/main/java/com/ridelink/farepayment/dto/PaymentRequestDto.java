@@ -1,26 +1,25 @@
 package com.ridelink.farepayment.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 
 public class PaymentRequestDto {
 
-    @NotBlank(message = "Order ID is required")
     private String orderId;
 
     @NotBlank(message = "Ride ID is required")
     private String rideId;
 
-    @NotBlank(message = "User ID is required")
+    private String passengerId;
+
     private String userId;
 
-    @Positive(message = "Amount must be greater than 0")
+    private double fareAmount;
+
     private double amount;
 
     @NotBlank(message = "Payment method is required")
     private String paymentMethod;
 
-    @NotBlank(message = "Payment status is required")
     private String paymentStatus;
 
     public PaymentRequestDto() {
@@ -42,20 +41,38 @@ public class PaymentRequestDto {
         this.rideId = rideId;
     }
 
+    public String getPassengerId() {
+        return passengerId != null ? passengerId : userId;
+    }
+
+    public void setPassengerId(String passengerId) {
+        this.passengerId = passengerId;
+        this.userId = passengerId;
+    }
+
     public String getUserId() {
-        return userId;
+        return getPassengerId();
     }
 
     public void setUserId(String userId) {
-        this.userId = userId;
+        setPassengerId(userId);
+    }
+
+    public double getFareAmount() {
+        return fareAmount > 0 ? fareAmount : amount;
+    }
+
+    public void setFareAmount(double fareAmount) {
+        this.fareAmount = fareAmount;
+        this.amount = fareAmount;
     }
 
     public double getAmount() {
-        return amount;
+        return getFareAmount();
     }
 
     public void setAmount(double amount) {
-        this.amount = amount;
+        setFareAmount(amount);
     }
 
     public String getPaymentMethod() {
