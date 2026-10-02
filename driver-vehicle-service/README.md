@@ -194,6 +194,61 @@ Example response:
 
 ---
 
+## 7.1 Driver Login & JWT Authentication
+
+Drivers can authenticate using their registered `licenseNumber` (or `email`) and `password`.
+
+### Request
+
+```http
+POST /api/drivers/login
+Content-Type: application/json
+```
+
+Example request:
+
+```json
+{
+  "licenseNumber": "B1234567",
+  "password": "driverPassword123"
+}
+```
+
+Or using email:
+
+```json
+{
+  "email": "nimal@example.com",
+  "password": "driverPassword123"
+}
+```
+
+Successful response:
+
+```text
+HTTP 200 OK
+```
+
+Example response:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJCMTIzNDU2NyIsImRyaXZlcklkIjoiZ2VuZXJhdGVkLWRyaXZlci1pZCIsImxpY2Vuc2VOdW1iZXIiOiJCMTIzNDU2NyIsIm5hbWUiOiJOaW1hbCBQZXJlcmEiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzc1MTQyNDAwLCJleHAiOjE3NzUyMjg4MDB9.signature",
+  "type": "Bearer",
+  "driverId": "generated-driver-id",
+  "name": "Nimal Perera",
+  "licenseNumber": "B1234567"
+}
+```
+
+The returned token is an HMAC-SHA256 signed JWT containing `driverId`, `licenseNumber`, `name`, and `role: "DRIVER"` claims. It should be passed in subsequent HTTP requests via the header:
+
+```text
+Authorization: Bearer <token>
+```
+
+---
+
 ## 8. Inter-Service Driver Contract
 
 Other RideLink services can retrieve the minimum driver information required for integration using:
@@ -498,22 +553,22 @@ Import the collection into Postman and run it against:
 http://localhost:8082
 ```
 
-The collection automatically stores the generated driver ID in:
+The collection automatically stores:
+- Driver ID in `{{driverId}}`
+- Signed JWT Bearer token in `{{token}}`
 
-```text
-{{driverId}}
-```
-
-and uses it for subsequent requests.
+and injects `Authorization: Bearer {{token}}` for authenticated calls.
 
 The collection tests the complete lifecycle:
 
 ```text
 Create Driver
       ↓
-Get Integration View
+Driver Login (Extracts & Sets {{token}})
       ↓
-Get Full Profile
+Get Integration View (Passes Bearer {{token}})
+      ↓
+Get Full Profile (Passes Bearer {{token}})
       ↓
 Retrieve Available Drivers
       ↓
@@ -535,8 +590,8 @@ Verify 404 After Deletion
 The verified collection run executed:
 
 ```text
-11 API requests
-19 tests passed
+12 API requests
+22 tests passed
 0 failed
 0 skipped
 0 errors

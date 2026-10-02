@@ -12,6 +12,21 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // INVALID CREDENTIALS
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(
+            InvalidCredentialsException ex) {
+
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("status", HttpStatus.UNAUTHORIZED.value());
+        error.put("error", "Unauthorized");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(error);
+    }
+
     // DRIVER NOT FOUND
     @ExceptionHandler(DriverNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleDriverNotFound(

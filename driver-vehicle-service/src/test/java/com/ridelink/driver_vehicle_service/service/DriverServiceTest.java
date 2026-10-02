@@ -2,10 +2,13 @@ package com.ridelink.driver_vehicle_service.service;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLoginRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLoginResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
+import com.ridelink.driver_vehicle_service.exception.InvalidCredentialsException;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.model.Vehicle;
@@ -708,5 +711,64 @@ class DriverServiceTest {
 
         verify(driverRepository, times(1))
                 .save(testDriver);
+    }
+
+
+    // =========================================================
+    // TEST 12 - LOGIN SUCCESS
+    // =========================================================
+
+    @Test
+    void shouldLoginSuccessfullyWhenCredentialsValid() {
+        testDriver.setEmail("nimal@example.com");
+        testDriver.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("Password123"));
+
+        when(driverRepository.findByLicenseNumber("B1234567"))
+                .thenReturn(List.of(testDriver));
+
+        DriverLoginRequest request = new DriverLoginRequest("B1234567", "Password123");
+        DriverLoginResponse response = driverService.login(request);
+
+        assertNotNull(response);
+        assertNotNull(response.getToken());
+        assertEquals("DRV001", response.getDriverId());
+        assertEquals("Nimal Perera", response.getName());
+        assertEquals("B1234567", response.getLicenseNumber());
+    }
+
+
+    // =========================================================
+    // TEST 13 - LOGIN FAIL DRIVER NOT FOUND
+    // =========================================================
+
+    @Test
+    void shouldFailLoginWhenDriverNotFound() {
+        when(driverRepository.findByLicenseNumber("UNKNOWN"))
+                .thenReturn(List.of());
+
+        DriverLoginRequest request = new DriverLoginRequest("UNKNOWN", "Password123");
+
+        assertThrows(InvalidCredentialsException.class, () -> {
+            driverService.login(request);
+        });
+    }
+
+
+    // =========================================================
+    // TEST 14 - LOGIN FAIL INCORRECT PASSWORD
+    // =========================================================
+
+    @Test
+    void shouldFailLoginWhenPasswordIncorrect() {
+        testDriver.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("CorrectPassword"));
+
+        when(driverRepository.findByLicenseNumber("B1234567"))
+                .thenReturn(List.of(testDriver));
+
+        DriverLoginRequest request = new DriverLoginRequest("B1234567", "WrongPassword");
+
+        assertThrows(InvalidCredentialsException.class, () -> {
+            driverService.login(request);
+        });
     }
 }
