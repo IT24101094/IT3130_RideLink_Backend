@@ -34,7 +34,7 @@ public class AccountService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(passenger.getEmail());
+        String token = jwtUtil.generateToken(passenger.getEmail(), passenger.getId(), "ROLE_PASSENGER");
         return new LoginResponse(token);
     }
 
