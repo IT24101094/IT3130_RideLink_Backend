@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "ridelink-driver-vehicle-service",
     "name": "RideLink - Driver & Vehicle Service",
-    "description": "Postman collection for testing the RideLink Driver & Vehicle microservice running on port 8082.",
+    "description": "Postman collection for testing the RideLink Driver & Vehicle microservice running on port 8082 with JWT authentication.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,6 +12,10 @@
     },
     {
       "key": "driverId",
+      "value": ""
+    },
+    {
+      "key": "token",
       "value": ""
     }
   ],
@@ -28,7 +32,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Nimal Perera\",\n  \"licenseNumber\": \"B1234567\",\n  \"available\": true,\n  \"serviceArea\": \"Colombo\",\n  \"currentLocation\": {\n    \"latitude\": 6.9271,\n    \"longitude\": 79.8612\n  },\n  \"vehicle\": {\n    \"registrationNumber\": \"CAB-1234\",\n    \"make\": \"Toyota\",\n    \"model\": \"Prius\",\n    \"type\": \"Car\",\n    \"color\": \"White\"\n  }\n}"
+          "raw": "{\n  \"name\": \"Nimal Perera\",\n  \"licenseNumber\": \"B1234567\",\n  \"available\": true,\n  \"serviceArea\": \"Colombo\",\n  \"currentLocation\": {\n    \"latitude\": 6.9271,\n    \"longitude\": 79.8612\n  },\n  \"vehicle\": {\n    \"registrationNumber\": \"CAB-1234\",\n    \"make\": \"Toyota\",\n    \"model\": \"Prius\",\n    \"type\": \"Car\",\n    \"color\": \"White\"\n  },\n  \"email\": \"nimal.driver@example.com\",\n  \"password\": \"Password123\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/drivers",
@@ -66,7 +70,55 @@
       ]
     },
     {
-      "name": "02 - Get Driver Integration View",
+      "name": "02 - Driver Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"licenseNumber\": \"B1234567\",\n  \"password\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/drivers/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drivers",
+            "login"
+          ]
+        },
+        "description": "Authenticates the driver with license number and password and receives a JWT token."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has token, type, and driver details\", function () {",
+              "    const res = pm.response.json();",
+              "    pm.expect(res.token).to.be.a(\"string\").and.not.empty;",
+              "    pm.expect(res.type).to.eql(\"Bearer\");",
+              "    pm.expect(res.driverId).to.exist;",
+              "    pm.collectionVariables.set(\"token\", res.token);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Get Driver Integration View",
       "request": {
         "method": "GET",
         "header": [],
@@ -105,7 +157,7 @@
       ]
     },
     {
-      "name": "03 - Get Full Driver Profile",
+      "name": "04 - Get Full Driver Profile",
       "request": {
         "method": "GET",
         "header": [],
@@ -145,7 +197,7 @@
       ]
     },
     {
-      "name": "04 - Get All Available Drivers",
+      "name": "05 - Get All Available Drivers",
       "request": {
         "method": "GET",
         "header": [],
@@ -180,7 +232,7 @@
       ]
     },
     {
-      "name": "05 - Get Available Drivers by Service Area",
+      "name": "06 - Get Available Drivers by Service Area",
       "request": {
         "method": "GET",
         "header": [],
@@ -221,7 +273,7 @@
       ]
     },
     {
-      "name": "06 - Update Driver",
+      "name": "07 - Update Driver",
       "request": {
         "method": "PUT",
         "header": [
@@ -261,7 +313,7 @@
       ]
     },
     {
-      "name": "07 - Set Driver Unavailable",
+      "name": "08 - Set Driver Unavailable",
       "request": {
         "method": "PATCH",
         "header": [
@@ -307,7 +359,7 @@
       ]
     },
     {
-      "name": "08 - Verify Unavailable Driver Filtering",
+      "name": "09 - Verify Unavailable Driver Filtering",
       "request": {
         "method": "GET",
         "header": [],
@@ -351,7 +403,7 @@
       ]
     },
     {
-      "name": "09 - Set Driver Available",
+      "name": "10 - Set Driver Available",
       "request": {
         "method": "PATCH",
         "header": [
@@ -396,7 +448,7 @@
       ]
     },
     {
-      "name": "10 - Delete Driver",
+      "name": "11 - Delete Driver",
       "request": {
         "method": "DELETE",
         "header": [],
@@ -427,7 +479,7 @@
       ]
     },
     {
-      "name": "11 - Verify Deleted Driver Returns 404",
+      "name": "12 - Verify Deleted Driver Returns 404",
       "request": {
         "method": "GET",
         "header": [],
@@ -457,5 +509,15 @@
         }
       ]
     }
-  ]
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
 }

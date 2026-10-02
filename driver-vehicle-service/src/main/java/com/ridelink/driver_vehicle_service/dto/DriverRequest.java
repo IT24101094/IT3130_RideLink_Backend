@@ -12,6 +12,10 @@ public class DriverRequest {
     @NotBlank(message = "License number is required")
     private String licenseNumber;
 
+    private String email;
+
+    private String password;
+
     private boolean available;
 
     @NotBlank(message = "Service area is required")
@@ -25,7 +29,7 @@ public class DriverRequest {
     public DriverRequest() {
     }
 
-    // Full constructor
+    // Constructor without email/password (backward compatibility)
     public DriverRequest(
             String name,
             String licenseNumber,
@@ -36,6 +40,27 @@ public class DriverRequest {
 
         this.name = name;
         this.licenseNumber = licenseNumber;
+        this.available = available;
+        this.serviceArea = serviceArea;
+        this.currentLocation = currentLocation;
+        this.vehicle = vehicle;
+    }
+
+    // Full constructor including email and password
+    public DriverRequest(
+            String name,
+            String licenseNumber,
+            String email,
+            String password,
+            boolean available,
+            String serviceArea,
+            Location currentLocation,
+            Vehicle vehicle) {
+
+        this.name = name;
+        this.licenseNumber = licenseNumber;
+        this.email = email;
+        this.password = password;
         this.available = available;
         this.serviceArea = serviceArea;
         this.currentLocation = currentLocation;
@@ -58,6 +83,24 @@ public class DriverRequest {
 
     public void setLicenseNumber(String licenseNumber) {
         this.licenseNumber = licenseNumber;
+    }
+
+    // Email
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    // Password
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     // Availability

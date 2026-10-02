@@ -2,14 +2,21 @@ package com.ridelink.driver_vehicle_service.service;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLoginRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLoginResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
+import com.ridelink.driver_vehicle_service.exception.InvalidCredentialsException;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
+import com.ridelink.driver_vehicle_service.util.JwtUtil;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,9 +25,20 @@ import java.util.List;
 public class DriverService {
 
     private final DriverRepository driverRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    @Autowired
+    public DriverService(DriverRepository driverRepository,
+                         PasswordEncoder passwordEncoder,
+                         JwtUtil jwtUtil) {
+        this.driverRepository = driverRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
 
     public DriverService(DriverRepository driverRepository) {
-        this.driverRepository = driverRepository;
+        this(driverRepository, new BCryptPasswordEncoder(), new JwtUtil());
     }
 
 
@@ -34,6 +52,10 @@ public class DriverService {
 
         driver.setName(request.getName());
         driver.setLicenseNumber(request.getLicenseNumber());
+        driver.setEmail(request.getEmail());
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            driver.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
         driver.setAvailable(request.isAvailable());
         driver.setServiceArea(request.getServiceArea());
         driver.setCurrentLocation(request.getCurrentLocation());
@@ -72,6 +94,12 @@ public class DriverService {
 
         driver.setName(request.getName());
         driver.setLicenseNumber(request.getLicenseNumber());
+        if (request.getEmail() != null) {
+            driver.setEmail(request.getEmail());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            driver.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
         driver.setAvailable(request.isAvailable());
         driver.setServiceArea(request.getServiceArea());
         driver.setCurrentLocation(request.getCurrentLocation());
@@ -246,7 +274,7 @@ public class DriverService {
             drivers =
                     driverRepository
                             .findByAvailableTrueAndServiceAreaIgnoreCase(
-                                    serviceArea
+                                     serviceArea
                             );
         }
 
@@ -270,5 +298,54 @@ public class DriverService {
                     );
                 })
                 .toList();
+    }
+
+
+    // =========================================================
+    // DRIVER LOGIN
+    // =========================================================
+
+    public DriverLoginResponse login(DriverLoginRequest request) {
+
+        Driver driver = null;
+
+        if (request.getLicenseNumber() != null && !request.getLicenseNumber().isBlank()) {
+            List<Driver> drivers = driverRepository.findByLicenseNumber(request.getLicenseNumber());
+            if (drivers != null && !drivers.isEmpty()) {
+                driver = drivers.get(0);
+            }
+        }
+
+        if (driver == null && request.getEmail() != null && !request.getEmail().isBlank()) {
+            List<Driver> drivers = driverRepository.findByEmail(request.getEmail());
+            if (drivers != null && !drivers.isEmpty()) {
+                driver = drivers.get(0);
+            }
+        }
+
+        if (driver == null) {
+            throw new InvalidCredentialsException("Invalid license number/email or password");
+        }
+
+        // Verify password if set on driver profile
+        if (driver.getPassword() != null && !driver.getPassword().isBlank()) {
+            if (request.getPassword() == null ||
+                    !passwordEncoder.matches(request.getPassword(), driver.getPassword())) {
+                throw new InvalidCredentialsException("Invalid license number/email or password");
+            }
+        }
+
+        String token = jwtUtil.generateToken(
+                driver.getId(),
+                driver.getLicenseNumber(),
+                driver.getName()
+        );
+
+        return new DriverLoginResponse(
+                token,
+                driver.getId(),
+                driver.getName(),
+                driver.getLicenseNumber()
+        );
     }
 }

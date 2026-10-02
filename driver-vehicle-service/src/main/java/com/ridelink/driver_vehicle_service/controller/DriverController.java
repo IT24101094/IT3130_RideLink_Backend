@@ -2,6 +2,8 @@ package com.ridelink.driver_vehicle_service.controller;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLoginRequest;
+import com.ridelink.driver_vehicle_service.dto.DriverLoginResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -39,6 +41,23 @@ public class DriverController {
 
     public DriverController(DriverService driverService) {
         this.driverService = driverService;
+    }
+
+
+    // =========================================================
+    // DRIVER LOGIN
+    // =========================================================
+
+    @Operation(
+            summary = "Driver login",
+            description = "Authenticates a driver using license number or email and password, returning a JWT token"
+    )
+    @PostMapping("/login")
+    public ResponseEntity<DriverLoginResponse> login(
+            @Valid @RequestBody DriverLoginRequest request) {
+
+        DriverLoginResponse response = driverService.login(request);
+        return ResponseEntity.ok(response);
     }
 
 
