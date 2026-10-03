@@ -1,0 +1,311 @@
+{
+  "info": {
+    "_postman_id": "a8f3bdfb-8453-45c0-93c3-6fbf3df9e10b",
+    "name": "Ride Management Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57802404",
+    "_collection_link": "https://go.postman.co/collection/57802404-a8f3bdfb-8453-45c0-93c3-6fbf3df9e10b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Positive Scenarios",
+      "item": [
+        {
+          "name": "passenger login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"perera@gmail.com\",\r\n  \"password\": \"perera123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/passengers/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "passengers",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "driver login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"licenseNumber\": \"B1234567\",\r\n  \"password\": \"Password123\"\r\n  }\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/drivers/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "drivers",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create ride",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{passenger_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n  \"pickupLocation\": \"Malabe\",\r\n  \"destination\": \"Kollupitiya\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/rides",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "rides"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "accept ride",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/rides/6abf98ee8eb6f6896c9fc8bc/accept",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "rides",
+                "6abf98ee8eb6f6896c9fc8bc",
+                "accept"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "start ride",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/rides/6abf98ee8eb6f6896c9fc8bc/start",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rides",
+                "6abf98ee8eb6f6896c9fc8bc",
+                "start"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ride complete",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/rides/6abf98ee8eb6f6896c9fc8bc/complete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rides",
+                "6abf98ee8eb6f6896c9fc8bc",
+                "complete"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Negative Scenarios",
+      "item": [
+        {
+          "name": "New Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"perera@gmail.com\",\r\n  \"password\": \"perera123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/passengers/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "passengers",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"licenseNumber\": \"B1234567\",\r\n  \"password\": \"Password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/drivers/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "drivers",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n  \"pickupLocation\": \"Malabe\",\r\n  \"destination\": \"Kollupitiya\",\r\n   \"paymentMethod\": \"CARD\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/rides",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "rides"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
