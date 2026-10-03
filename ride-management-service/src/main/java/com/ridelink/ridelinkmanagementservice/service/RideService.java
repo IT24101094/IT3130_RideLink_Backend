@@ -5,6 +5,8 @@ import com.ridelink.ridelinkmanagementservice.client.DriverServiceClient;
 import com.ridelink.ridelinkmanagementservice.client.FarePaymentServiceClient;
 import com.ridelink.ridelinkmanagementservice.dto.DriverDto;
 import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
+import com.ridelink.ridelinkmanagementservice.exception.BadRequestException;
+import com.ridelink.ridelinkmanagementservice.exception.ResourceNotFoundException;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.repository.RideRepository;
@@ -45,6 +47,17 @@ public class RideService {
 
     public Ride assignDriver(String rideId, String driverId) {
         Ride ride = getRideById(rideId);
+
+        if (ride.getStatus() == RideStatus.COMPLETED) {
+            throw new BadRequestException("Ride is already completed");
+        }
+        if (ride.getStatus() == RideStatus.IN_PROGRESS) {
+            throw new BadRequestException("Ride is already in progress");
+        }
+        if (ride.getStatus() == RideStatus.CANCELLED) {
+            throw new BadRequestException("Cannot assign driver to a cancelled ride");
+        }
+
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ASSIGNED);
 
@@ -56,6 +69,20 @@ public class RideService {
 
     public Ride acceptRide(String rideId, String driverId) {
         Ride ride = getRideById(rideId);
+
+        if (ride.getStatus() == RideStatus.COMPLETED) {
+            throw new BadRequestException("Ride is already completed");
+        }
+        if (ride.getStatus() == RideStatus.IN_PROGRESS) {
+            throw new BadRequestException("Ride is already in progress");
+        }
+        if (ride.getStatus() == RideStatus.CANCELLED) {
+            throw new BadRequestException("Cannot accept a cancelled ride");
+        }
+        if (ride.getStatus() == RideStatus.ACCEPTED) {
+            throw new BadRequestException("Ride is already accepted");
+        }
+
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ACCEPTED);
 
@@ -67,6 +94,17 @@ public class RideService {
 
     public Ride startRide(String rideId) {
         Ride ride = getRideById(rideId);
+
+        if (ride.getStatus() == RideStatus.COMPLETED) {
+            throw new BadRequestException("Ride is already completed");
+        }
+        if (ride.getStatus() == RideStatus.IN_PROGRESS) {
+            throw new BadRequestException("Ride is already in progress");
+        }
+        if (ride.getStatus() == RideStatus.CANCELLED) {
+            throw new BadRequestException("Cannot start a cancelled ride");
+        }
+
         ride.setStatus(RideStatus.IN_PROGRESS);
         ride.setStartTime(LocalDateTime.now());
         return rideRepository.save(ride);
@@ -74,6 +112,14 @@ public class RideService {
 
     public Ride completeRide(String rideId) {
         Ride ride = getRideById(rideId);
+
+        if (ride.getStatus() == RideStatus.COMPLETED) {
+            throw new BadRequestException("Ride is already completed");
+        }
+        if (ride.getStatus() == RideStatus.CANCELLED) {
+            throw new BadRequestException("Cannot complete a cancelled ride");
+        }
+
         ride.setStatus(RideStatus.COMPLETED);
         ride.setCompletedTime(LocalDateTime.now());
         Ride savedRide = rideRepository.save(ride);
@@ -114,6 +160,17 @@ public class RideService {
 
     public Ride cancelRide(String rideId) {
         Ride ride = getRideById(rideId);
+
+        if (ride.getStatus() == RideStatus.COMPLETED) {
+            throw new BadRequestException("Ride is already completed");
+        }
+        if (ride.getStatus() == RideStatus.CANCELLED) {
+            throw new BadRequestException("Ride is already cancelled");
+        }
+        if (ride.getStatus() == RideStatus.IN_PROGRESS) {
+            throw new BadRequestException("Cannot cancel a ride that is in progress");
+        }
+
         ride.setStatus(RideStatus.CANCELLED);
         return rideRepository.save(ride);
     }
@@ -121,9 +178,21 @@ public class RideService {
     public Ride updateRideStatus(String rideId, RideStatus newStatus) {
         Ride ride = getRideById(rideId);
 
+        if (ride.getStatus() == RideStatus.COMPLETED) {
+            throw new BadRequestException("Ride is already completed");
+        }
+        if (ride.getStatus() == RideStatus.CANCELLED) {
+            throw new BadRequestException("Ride is already cancelled");
+        }
+        if (ride.getStatus() == newStatus) {
+            throw new BadRequestException("Ride is already in " + newStatus + " status");
+        }
+
         ride.setStatus(newStatus);
         if (newStatus == RideStatus.COMPLETED) {
             ride.setCompletedTime(LocalDateTime.now());
+        } else if (newStatus == RideStatus.IN_PROGRESS && ride.getStartTime() == null) {
+            ride.setStartTime(LocalDateTime.now());
         }
 
         return rideRepository.save(ride);
@@ -131,6 +200,6 @@ public class RideService {
 
     public Ride getRideById(String rideId) {
         return rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found with id: " + rideId));
+                .orElseThrow(() -> new ResourceNotFoundException("Ride not found with id: " + rideId));
     }
 }
