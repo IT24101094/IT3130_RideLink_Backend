@@ -11,6 +11,14 @@ public class DriverResponse {
     }
 
     public DriverResponse(String id,
+                          String licenseNumber,
+                          String vehicleRegistrationNumber) {
+        this.id = id;
+        this.licenseNumber = licenseNumber;
+        this.vehicleRegistrationNumber = vehicleRegistrationNumber;
+    }
+
+    public DriverResponse(String id,
                           String name,
                           String licenseNumber,
                           String vehicleRegistrationNumber) {

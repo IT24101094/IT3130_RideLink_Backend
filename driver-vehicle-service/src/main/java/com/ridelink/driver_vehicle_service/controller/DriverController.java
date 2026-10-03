@@ -2,8 +2,6 @@ package com.ridelink.driver_vehicle_service.controller;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
-import com.ridelink.driver_vehicle_service.dto.DriverLoginRequest;
-import com.ridelink.driver_vehicle_service.dto.DriverLoginResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
@@ -45,29 +43,12 @@ public class DriverController {
 
 
     // =========================================================
-    // DRIVER LOGIN
+    // CREATE DRIVER PROFILE
     // =========================================================
 
     @Operation(
-            summary = "Driver login",
-            description = "Authenticates a driver using license number or email and password, returning a JWT token"
-    )
-    @PostMapping("/login")
-    public ResponseEntity<DriverLoginResponse> login(
-            @Valid @RequestBody DriverLoginRequest request) {
-
-        DriverLoginResponse response = driverService.login(request);
-        return ResponseEntity.ok(response);
-    }
-
-
-    // =========================================================
-    // CREATE DRIVER
-    // =========================================================
-
-    @Operation(
-            summary = "Create a driver",
-            description = "Creates a new driver together with vehicle, service area, availability and location information"
+            summary = "Create driver profile",
+            description = "Creates a new driver operational profile using an external ID provided by the account service alongside operational details"
     )
     @PostMapping
     public ResponseEntity<DriverResponse> createDriver(

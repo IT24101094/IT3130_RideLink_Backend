@@ -2,13 +2,10 @@ package com.ridelink.driver_vehicle_service.service;
 
 import com.ridelink.driver_vehicle_service.dto.DriverAvailabilityRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverLocationRequest;
-import com.ridelink.driver_vehicle_service.dto.DriverLoginRequest;
-import com.ridelink.driver_vehicle_service.dto.DriverLoginResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverProfileResponse;
 import com.ridelink.driver_vehicle_service.dto.DriverRequest;
 import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.exception.DriverNotFoundException;
-import com.ridelink.driver_vehicle_service.exception.InvalidCredentialsException;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.model.Vehicle;
@@ -58,7 +55,6 @@ class DriverServiceTest {
         testDriver = new Driver();
 
         testDriver.setId("DRV001");
-        testDriver.setName("Nimal Perera");
         testDriver.setLicenseNumber("B1234567");
         testDriver.setAvailable(true);
         testDriver.setServiceArea("Colombo");
@@ -84,11 +80,6 @@ class DriverServiceTest {
         assertEquals(
                 "DRV001",
                 response.getId()
-        );
-
-        assertEquals(
-                "Nimal Perera",
-                response.getName()
         );
 
         assertEquals(
@@ -133,7 +124,7 @@ class DriverServiceTest {
 
 
     // =========================================================
-    // TEST 3 - CREATE DRIVER
+    // TEST 3 - CREATE DRIVER WITH EXTERNAL ID
     // =========================================================
 
     @Test
@@ -141,22 +132,14 @@ class DriverServiceTest {
 
         DriverRequest request = new DriverRequest();
 
-        request.setName("Kamal Silva");
+        request.setId("DRV002");
         request.setLicenseNumber("B7654321");
         request.setAvailable(true);
         request.setServiceArea("Colombo");
         request.setVehicle(testDriver.getVehicle());
 
         when(driverRepository.save(any(Driver.class)))
-                .thenAnswer(invocation -> {
-
-                    Driver driver =
-                            invocation.getArgument(0);
-
-                    driver.setId("DRV002");
-
-                    return driver;
-                });
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         DriverResponse response =
                 driverService.createDriver(request);
@@ -166,11 +149,6 @@ class DriverServiceTest {
         assertEquals(
                 "DRV002",
                 response.getId()
-        );
-
-        assertEquals(
-                "Kamal Silva",
-                response.getName()
         );
 
         assertEquals(
@@ -197,7 +175,6 @@ class DriverServiceTest {
 
         DriverRequest request = new DriverRequest();
 
-        request.setName("Nimal Updated");
         request.setLicenseNumber("B9999999");
         request.setAvailable(false);
         request.setServiceArea("Kandy");
@@ -221,11 +198,6 @@ class DriverServiceTest {
         assertEquals(
                 "DRV001",
                 response.getId()
-        );
-
-        assertEquals(
-                "Nimal Updated",
-                response.getName()
         );
 
         assertEquals(
@@ -271,7 +243,6 @@ class DriverServiceTest {
         Driver secondDriver = new Driver();
 
         secondDriver.setId("DRV002");
-        secondDriver.setName("Amal Fernando");
         secondDriver.setLicenseNumber("B2222222");
         secondDriver.setAvailable(true);
         secondDriver.setServiceArea("Kandy");
@@ -360,11 +331,6 @@ class DriverServiceTest {
         assertEquals(
                 "DRV001",
                 responses.get(0).getId()
-        );
-
-        assertEquals(
-                "Nimal Perera",
-                responses.get(0).getName()
         );
 
         assertEquals(
@@ -471,11 +437,6 @@ class DriverServiceTest {
         );
 
         assertEquals(
-                "Nimal Perera",
-                response.getName()
-        );
-
-        assertEquals(
                 "B1234567",
                 response.getLicenseNumber()
         );
@@ -575,11 +536,6 @@ class DriverServiceTest {
         );
 
         assertEquals(
-                "Nimal Perera",
-                response.getName()
-        );
-
-        assertEquals(
                 "B1234567",
                 response.getLicenseNumber()
         );
@@ -652,11 +608,6 @@ class DriverServiceTest {
                 response.getId()
         );
 
-        assertEquals(
-                "Nimal Perera",
-                response.getName()
-        );
-
         assertNotNull(
                 response.getCurrentLocation()
         );
@@ -715,60 +666,41 @@ class DriverServiceTest {
 
 
     // =========================================================
-    // TEST 12 - LOGIN SUCCESS
+    // TEST 12 - CREATE DRIVER PROFILE WITH EXTERNAL ID
     // =========================================================
 
     @Test
-    void shouldLoginSuccessfullyWhenCredentialsValid() {
-        testDriver.setEmail("nimal@example.com");
-        testDriver.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("Password123"));
+    void shouldCreateDriverProfileAcceptingExternalIdFromAccountService() {
 
-        when(driverRepository.findByLicenseNumber("B1234567"))
-                .thenReturn(List.of(testDriver));
+        String externalAccountId = "66f43210abcd1234ef005678";
 
-        DriverLoginRequest request = new DriverLoginRequest("B1234567", "Password123");
-        DriverLoginResponse response = driverService.login(request);
+        DriverRequest request = new DriverRequest(
+                externalAccountId,
+                "B5554443",
+                true,
+                "Colombo",
+                new Location(6.9271, 79.8612),
+                testDriver.getVehicle()
+        );
+
+        when(driverRepository.save(any(Driver.class)))
+                .thenAnswer(invocation -> {
+                    Driver driverToSave = invocation.getArgument(0);
+                    assertEquals(externalAccountId, driverToSave.getId());
+                    assertEquals("B5554443", driverToSave.getLicenseNumber());
+                    assertTrue(driverToSave.isAvailable());
+                    assertEquals("Colombo", driverToSave.getServiceArea());
+                    assertEquals(testDriver.getVehicle(), driverToSave.getVehicle());
+                    return driverToSave;
+                });
+
+        DriverResponse response = driverService.createDriver(request);
 
         assertNotNull(response);
-        assertNotNull(response.getToken());
-        assertEquals("DRV001", response.getDriverId());
-        assertEquals("Nimal Perera", response.getName());
-        assertEquals("B1234567", response.getLicenseNumber());
-    }
+        assertEquals(externalAccountId, response.getId());
+        assertEquals("B5554443", response.getLicenseNumber());
+        assertEquals("CAB-1234", response.getVehicleRegistrationNumber());
 
-
-    // =========================================================
-    // TEST 13 - LOGIN FAIL DRIVER NOT FOUND
-    // =========================================================
-
-    @Test
-    void shouldFailLoginWhenDriverNotFound() {
-        when(driverRepository.findByLicenseNumber("UNKNOWN"))
-                .thenReturn(List.of());
-
-        DriverLoginRequest request = new DriverLoginRequest("UNKNOWN", "Password123");
-
-        assertThrows(InvalidCredentialsException.class, () -> {
-            driverService.login(request);
-        });
-    }
-
-
-    // =========================================================
-    // TEST 14 - LOGIN FAIL INCORRECT PASSWORD
-    // =========================================================
-
-    @Test
-    void shouldFailLoginWhenPasswordIncorrect() {
-        testDriver.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("CorrectPassword"));
-
-        when(driverRepository.findByLicenseNumber("B1234567"))
-                .thenReturn(List.of(testDriver));
-
-        DriverLoginRequest request = new DriverLoginRequest("B1234567", "WrongPassword");
-
-        assertThrows(InvalidCredentialsException.class, () -> {
-            driverService.login(request);
-        });
+        verify(driverRepository, times(1)).save(any(Driver.class));
     }
 }
