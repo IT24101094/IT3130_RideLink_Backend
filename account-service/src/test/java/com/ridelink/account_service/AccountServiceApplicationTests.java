@@ -18,6 +18,9 @@ class AccountServiceApplicationTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private com.ridelink.account_service.util.JwtUtil jwtUtil;
+
     @Test
     void contextLoads() {
     }
@@ -121,5 +124,99 @@ class AccountServiceApplicationTests {
                         .content(loginJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isString());
+    }
+
+    @Test
+    void shouldRegisterDriverSuccessfully() throws Exception {
+        String uniqueEmail = "driver" + System.currentTimeMillis() + "@example.com";
+        String registerDriverJson = String.format("""
+                {
+                    "name": "Integration Driver",
+                    "email": "%s",
+                    "password": "DriverPassword123",
+                    "phoneNumber": "0778889999"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/accounts/drivers/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registerDriverJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.name").value("Integration Driver"))
+                .andExpect(jsonPath("$.email").value(uniqueEmail))
+                .andExpect(jsonPath("$.role").value("DRIVER"));
+    }
+
+    @Test
+    void shouldLoginDriverSuccessfullyAndReturnJwtWithDriverRole() throws Exception {
+        String uniqueEmail = "driverjwt" + System.currentTimeMillis() + "@example.com";
+        String registerDriverJson = String.format("""
+                {
+                    "name": "Driver JWT User",
+                    "email": "%s",
+                    "password": "SecurePassword123",
+                    "phoneNumber": "0771112222"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/accounts/drivers/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registerDriverJson))
+                .andExpect(status().isCreated());
+
+        String loginJson = String.format("""
+                {
+                    "email": "%s",
+                    "password": "SecurePassword123"
+                }
+                """, uniqueEmail);
+
+        org.springframework.test.web.servlet.MvcResult result = mockMvc.perform(post("/api/accounts/drivers/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isString())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        com.fasterxml.jackson.databind.JsonNode rootNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(responseBody);
+        String token = rootNode.get("token").asText();
+
+        // Verify that the token contains the DRIVER role
+        io.jsonwebtoken.Claims claims = jwtUtil.extractAllClaims(token);
+        org.junit.jupiter.api.Assertions.assertEquals("DRIVER", claims.get("role"));
+    }
+
+    @Test
+    void shouldRejectDriverLoginWithWrongPassword() throws Exception {
+        String uniqueEmail = "driverfail" + System.currentTimeMillis() + "@example.com";
+        String registerDriverJson = String.format("""
+                {
+                    "name": "Driver Fail User",
+                    "email": "%s",
+                    "password": "CorrectPassword123",
+                    "phoneNumber": "0771113333"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/accounts/drivers/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registerDriverJson))
+                .andExpect(status().isCreated());
+
+        String loginJson = String.format("""
+                {
+                    "email": "%s",
+                    "password": "WrongPassword123"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/accounts/drivers/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Invalid email or password"));
     }
 }

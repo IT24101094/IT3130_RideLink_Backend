@@ -44,6 +44,14 @@ public class JwtUtil {
         return generateToken(claims, username);
     }
 
+    public String generateDriverToken(String username, String driverId, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", driverId);
+        claims.put("driverId", driverId);
+        claims.put("role", role);
+        return generateToken(claims, username);
+    }
+
     public String generateToken(Map<String, Object> extraClaims, String subject) {
         return Jwts.builder()
                 .setClaims(extraClaims)
