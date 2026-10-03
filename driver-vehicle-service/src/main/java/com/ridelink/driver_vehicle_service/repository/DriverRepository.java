@@ -12,6 +12,4 @@ public interface DriverRepository extends MongoRepository<Driver, String> {
     List<Driver> findByAvailableTrueAndServiceAreaIgnoreCase(String serviceArea);
 
     List<Driver> findByLicenseNumber(String licenseNumber);
-
-    List<Driver> findByEmail(String email);
 }

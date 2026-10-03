@@ -18,6 +18,22 @@ public class DriverProfileResponse {
 
     public DriverProfileResponse(
             String id,
+            String licenseNumber,
+            boolean available,
+            String serviceArea,
+            Location currentLocation,
+            Vehicle vehicle) {
+
+        this.id = id;
+        this.licenseNumber = licenseNumber;
+        this.available = available;
+        this.serviceArea = serviceArea;
+        this.currentLocation = currentLocation;
+        this.vehicle = vehicle;
+    }
+
+    public DriverProfileResponse(
+            String id,
             String name,
             String licenseNumber,
             boolean available,
