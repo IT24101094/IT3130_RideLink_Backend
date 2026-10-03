@@ -1,11 +1,16 @@
 package com.ridelink.account_service.service;
 
+import com.ridelink.account_service.dto.DriverAccountResponse;
+import com.ridelink.account_service.dto.DriverRegisterRequest;
 import com.ridelink.account_service.dto.LoginRequest;
 import com.ridelink.account_service.dto.LoginResponse;
 import com.ridelink.account_service.dto.PassengerDto;
 import com.ridelink.account_service.exception.InvalidCredentialsException;
 import com.ridelink.account_service.exception.ResourceNotFoundException;
+import com.ridelink.account_service.model.DriverAccount;
 import com.ridelink.account_service.model.Passenger;
+import com.ridelink.account_service.model.Role;
+import com.ridelink.account_service.repository.DriverAccountRepository;
 import com.ridelink.account_service.repository.PassengerRepository;
 import com.ridelink.account_service.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +26,73 @@ public class AccountService {
     private PassengerRepository passengerRepository;
 
     @Autowired
+    private DriverAccountRepository driverAccountRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    // =========================================================
+    // DRIVER AUTHENTICATION & MANAGEMENT
+    // =========================================================
+
+    public DriverAccountResponse registerDriver(DriverRegisterRequest request) {
+        if (driverAccountRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+
+        DriverAccount driverAccount = DriverAccount.builder()
+                .id(request.getId())
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(hashedPassword)
+                .phoneNumber(request.getPhoneNumber())
+                .role(Role.DRIVER)
+                .build();
+
+        DriverAccount saved = driverAccountRepository.save(driverAccount);
+
+        return DriverAccountResponse.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .email(saved.getEmail())
+                .phoneNumber(saved.getPhoneNumber())
+                .role(saved.getRole())
+                .build();
+    }
+
+    public LoginResponse driverLogin(LoginRequest request) {
+        DriverAccount driver = driverAccountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), driver.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        String token = jwtUtil.generateDriverToken(driver.getEmail(), driver.getId(), "DRIVER");
+        return new LoginResponse(token);
+    }
+
+    public DriverAccountResponse getDriverAccountById(String id) {
+        DriverAccount driver = driverAccountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Driver account not found with id: " + id));
+
+        return DriverAccountResponse.builder()
+                .id(driver.getId())
+                .name(driver.getName())
+                .email(driver.getEmail())
+                .phoneNumber(driver.getPhoneNumber())
+                .role(driver.getRole())
+                .build();
+    }
+
+    // =========================================================
+    // PASSENGER AUTHENTICATION & MANAGEMENT
+    // =========================================================
 
     public LoginResponse login(LoginRequest request) {
         Passenger passenger = passengerRepository.findByEmail(request.getEmail())
