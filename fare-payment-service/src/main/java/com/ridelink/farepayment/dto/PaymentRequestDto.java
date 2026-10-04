@@ -13,6 +13,8 @@ public class PaymentRequestDto {
 
     private String userId;
 
+    private String driverId;
+
     private double fareAmount;
 
     private double amount;
@@ -89,5 +91,13 @@ public class PaymentRequestDto {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public String getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(String driverId) {
+        this.driverId = driverId;
     }
 }

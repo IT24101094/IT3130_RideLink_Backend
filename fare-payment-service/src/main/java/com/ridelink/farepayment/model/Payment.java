@@ -22,6 +22,8 @@ public class Payment {
 
     private String userId;
 
+    private String driverId;
+
     private double fareAmount;
 
     private double amount;
@@ -44,10 +46,23 @@ public class Payment {
             String paymentMethod,
             String paymentStatus,
             String transactionId) {
+        this(orderId, rideId, passengerId, null, fareAmount, paymentMethod, paymentStatus, transactionId);
+    }
+
+    public Payment(
+            String orderId,
+            String rideId,
+            String passengerId,
+            String driverId,
+            double fareAmount,
+            String paymentMethod,
+            String paymentStatus,
+            String transactionId) {
         this.orderId = orderId;
         this.rideId = rideId;
         this.passengerId = passengerId;
         this.userId = passengerId;
+        this.driverId = driverId;
         this.fareAmount = fareAmount;
         this.amount = fareAmount;
         this.paymentMethod = paymentMethod;
@@ -62,7 +77,18 @@ public class Payment {
             double fareAmount,
             String paymentMethod,
             String paymentStatus) {
-        this(orderId, rideId, passengerId, fareAmount, paymentMethod, paymentStatus, null);
+        this(orderId, rideId, passengerId, null, fareAmount, paymentMethod, paymentStatus, null);
+    }
+
+    public Payment(
+            String orderId,
+            String rideId,
+            String passengerId,
+            String driverId,
+            double fareAmount,
+            String paymentMethod,
+            String paymentStatus) {
+        this(orderId, rideId, passengerId, driverId, fareAmount, paymentMethod, paymentStatus, null);
     }
 
     public String getId() {
@@ -145,5 +171,13 @@ public class Payment {
 
     public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
+    }
+
+    public String getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(String driverId) {
+        this.driverId = driverId;
     }
 }

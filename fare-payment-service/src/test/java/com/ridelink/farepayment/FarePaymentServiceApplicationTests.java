@@ -1,5 +1,6 @@
 package com.ridelink.farepayment;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.ridelink.farepayment.dto.DriverPaymentStatsDto;
 import com.ridelink.farepayment.model.Fare;
 import com.ridelink.farepayment.model.Payment;
 import com.ridelink.farepayment.repository.FareRepository;
@@ -200,5 +202,51 @@ class FarePaymentServiceApplicationTests {
         assertEquals("SUCCESS", status);
 
         verify(paymentRepository, times(1)).findById("PAY001");
+    }
+
+    @Test
+    void getPassengerPaymentHistory_shouldReturnPaymentsForPassenger() {
+        Payment p1 = new Payment("ORD1", "R1", "P1", 500.0, "CASH", "PAID");
+        Payment p2 = new Payment("ORD2", "R2", "P1", 800.0, "CARD", "PAID");
+
+        when(paymentRepository.findByPassengerId("P1")).thenReturn(List.of(p1, p2));
+
+        List<Payment> history = paymentService.getPassengerPaymentHistory("P1");
+
+        assertEquals(2, history.size());
+        assertEquals("ORD1", history.get(0).getOrderId());
+        assertEquals("ORD2", history.get(1).getOrderId());
+        verify(paymentRepository, times(1)).findByPassengerId("P1");
+    }
+
+    @Test
+    void getDriverStats_shouldCalculateTotalEarningsAndSplitCorrectly() {
+        Payment p1 = new Payment("ORD1", "R1", "P1", "D1", 500.0, "CASH", "PAID", null);
+        Payment p2 = new Payment("ORD2", "R2", "P2", "D1", 800.0, "CARD", "PAID", "TXN123");
+        Payment p3 = new Payment("ORD3", "R3", "P3", "D1", 200.0, "CASH", "PAID", null);
+
+        when(paymentRepository.findByDriverId("D1")).thenReturn(List.of(p1, p2, p3));
+
+        DriverPaymentStatsDto stats = paymentService.getDriverStats("D1");
+
+        assertEquals("D1", stats.getDriverId());
+        assertEquals(1500.0, stats.getTotalEarnings());
+        assertEquals(700.0, stats.getCashTotal());
+        assertEquals(800.0, stats.getCardTotal());
+        verify(paymentRepository, times(1)).findByDriverId("D1");
+    }
+
+    @Test
+    void getDriverStats_shouldExcludeFailedPayments() {
+        Payment p1 = new Payment("ORD1", "R1", "P1", "D1", 500.0, "CASH", "PAID", null);
+        Payment p2 = new Payment("ORD2", "R2", "P2", "D1", 800.0, "CARD", "FAILED", null);
+
+        when(paymentRepository.findByDriverId("D1")).thenReturn(List.of(p1, p2));
+
+        DriverPaymentStatsDto stats = paymentService.getDriverStats("D1");
+
+        assertEquals(500.0, stats.getTotalEarnings());
+        assertEquals(500.0, stats.getCashTotal());
+        assertEquals(0.0, stats.getCardTotal());
     }
 }
