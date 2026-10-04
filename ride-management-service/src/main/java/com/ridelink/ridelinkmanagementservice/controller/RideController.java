@@ -1,5 +1,6 @@
 package com.ridelink.ridelinkmanagementservice.controller;
 
+import com.ridelink.ridelinkmanagementservice.dto.DriverStatsDto;
 import com.ridelink.ridelinkmanagementservice.dto.RideRequestDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
@@ -13,6 +14,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/rides")
@@ -121,6 +124,18 @@ public class RideController {
     public ResponseEntity<Ride> getRideById(@PathVariable String id) {
         Ride ride = rideService.getRideById(id);
         return ResponseEntity.ok(ride);
+    }
+
+    @GetMapping("/passenger/{passengerId}/history")
+    public ResponseEntity<List<Ride>> getPassengerRideHistory(@PathVariable String passengerId) {
+        List<Ride> history = rideService.getPassengerRideHistory(passengerId);
+        return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/driver/{driverId}/stats")
+    public ResponseEntity<DriverStatsDto> getDriverStats(@PathVariable String driverId) {
+        DriverStatsDto stats = rideService.getDriverStats(driverId);
+        return ResponseEntity.ok(stats);
     }
 
     private void verifyRole(String role1, String role2, String message) {

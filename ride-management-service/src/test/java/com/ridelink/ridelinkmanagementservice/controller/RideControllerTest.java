@@ -1,5 +1,6 @@
 package com.ridelink.ridelinkmanagementservice.controller;
 
+import com.ridelink.ridelinkmanagementservice.dto.DriverStatsDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.service.RideService;
@@ -13,8 +14,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -108,5 +111,32 @@ class RideControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("r1"))
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
+    void getPassengerRideHistory_ReturnsList() throws Exception {
+        Ride r1 = new Ride();
+        r1.setId("r1");
+        r1.setPassengerId("p1");
+        r1.setStatus(RideStatus.COMPLETED);
+
+        when(rideService.getPassengerRideHistory("p1")).thenReturn(List.of(r1));
+
+        mockMvc.perform(get("/api/rides/passenger/p1/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("r1"))
+                .andExpect(jsonPath("$[0].passengerId").value("p1"))
+                .andExpect(jsonPath("$[0].status").value("COMPLETED"));
+    }
+
+    @Test
+    void getDriverStats_ReturnsStatsDto() throws Exception {
+        DriverStatsDto stats = new DriverStatsDto("d1", 5);
+        when(rideService.getDriverStats("d1")).thenReturn(stats);
+
+        mockMvc.perform(get("/api/rides/driver/d1/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.driverId").value("d1"))
+                .andExpect(jsonPath("$.totalRides").value(5));
     }
 }

@@ -15,7 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.ridelink.ridelinkmanagementservice.dto.DriverStatsDto;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -181,5 +183,49 @@ class RideServiceTest {
         assertThrows(RuntimeException.class, () -> rideService.startRide("nonexistent"));
         assertThrows(RuntimeException.class, () -> rideService.completeRide("nonexistent"));
         assertThrows(RuntimeException.class, () -> rideService.cancelRide("nonexistent"));
+    }
+
+    @Test
+    void getPassengerRideHistory_ReturnsList() {
+        Ride r1 = new Ride();
+        r1.setId("r1");
+        r1.setPassengerId("p1");
+        Ride r2 = new Ride();
+        r2.setId("r2");
+        r2.setPassengerId("p1");
+
+        when(rideRepository.findByPassengerId("p1")).thenReturn(List.of(r1, r2));
+
+        List<Ride> history = rideService.getPassengerRideHistory("p1");
+        assertEquals(2, history.size());
+        assertEquals("r1", history.get(0).getId());
+        assertEquals("r2", history.get(1).getId());
+    }
+
+    @Test
+    void getCompletedRidesCountForDriver_CalculatesCompletedOnly() {
+        Ride r1 = new Ride();
+        r1.setId("r1");
+        r1.setDriverId("d1");
+        r1.setStatus(RideStatus.COMPLETED);
+
+        Ride r2 = new Ride();
+        r2.setId("r2");
+        r2.setDriverId("d1");
+        r2.setStatus(RideStatus.CANCELLED);
+
+        Ride r3 = new Ride();
+        r3.setId("r3");
+        r3.setDriverId("d1");
+        r3.setStatus(RideStatus.COMPLETED);
+
+        when(rideRepository.findByDriverId("d1")).thenReturn(List.of(r1, r2, r3));
+
+        long count = rideService.getCompletedRidesCountForDriver("d1");
+        assertEquals(2, count);
+
+        DriverStatsDto stats = rideService.getDriverStats("d1");
+        assertEquals("d1", stats.getDriverId());
+        assertEquals(2, stats.getTotalRides());
     }
 }
