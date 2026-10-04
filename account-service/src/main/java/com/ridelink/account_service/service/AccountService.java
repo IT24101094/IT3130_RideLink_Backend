@@ -13,14 +13,25 @@ import com.ridelink.account_service.model.Role;
 import com.ridelink.account_service.repository.DriverAccountRepository;
 import com.ridelink.account_service.repository.PassengerRepository;
 import com.ridelink.account_service.util.JwtUtil;
+import com.ridelink.account_service.client.FarePaymentServiceClient;
+import com.ridelink.account_service.client.RideServiceClient;
+import com.ridelink.account_service.dto.PassengerProfileResponse;
+import com.ridelink.account_service.dto.PaymentHistoryDto;
+import com.ridelink.account_service.dto.RideHistoryDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class AccountService {
+
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
 
     @Autowired
     private PassengerRepository passengerRepository;
@@ -33,6 +44,29 @@ public class AccountService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired(required = false)
+    private RideServiceClient rideServiceClient;
+
+    @Autowired(required = false)
+    private FarePaymentServiceClient farePaymentServiceClient;
+
+    public AccountService() {
+    }
+
+    public AccountService(PassengerRepository passengerRepository,
+                          DriverAccountRepository driverAccountRepository,
+                          PasswordEncoder passwordEncoder,
+                          JwtUtil jwtUtil,
+                          RideServiceClient rideServiceClient,
+                          FarePaymentServiceClient farePaymentServiceClient) {
+        this.passengerRepository = passengerRepository;
+        this.driverAccountRepository = driverAccountRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.rideServiceClient = rideServiceClient;
+        this.farePaymentServiceClient = farePaymentServiceClient;
+    }
 
     // =========================================================
     // DRIVER AUTHENTICATION & MANAGEMENT
@@ -188,5 +222,50 @@ public class AccountService {
         Passenger existingPassenger = passengerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Passenger not found with id: " + id));
         passengerRepository.delete(existingPassenger);
+    }
+
+    // =========================================================
+    // PASSENGER PROFILE COMPOSITION
+    // =========================================================
+
+    public PassengerProfileResponse getPassengerProfile(String passengerId) {
+        Passenger passenger = passengerRepository.findById(passengerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Passenger not found with id: " + passengerId));
+
+        List<RideHistoryDto> rideHistory = new ArrayList<>();
+        if (rideServiceClient != null) {
+            try {
+                List<RideHistoryDto> rides = rideServiceClient.getPassengerRideHistory(passengerId);
+                if (rides != null) {
+                    rideHistory = rides;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch ride history for passenger {}: {}", passengerId, e.getMessage());
+            }
+        }
+
+        List<PaymentHistoryDto> paymentHistory = new ArrayList<>();
+        if (farePaymentServiceClient != null) {
+            try {
+                List<PaymentHistoryDto> payments = farePaymentServiceClient.getPassengerPaymentHistory(passengerId);
+                if (payments != null) {
+                    paymentHistory = payments;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch payment history for passenger {}: {}", passengerId, e.getMessage());
+            }
+        }
+
+        return PassengerProfileResponse.builder()
+                .id(passenger.getId())
+                .name(passenger.getName())
+                .email(passenger.getEmail())
+                .phone(passenger.getPhoneNumber())
+                .phoneNumber(passenger.getPhoneNumber())
+                .nic(passenger.getNic())
+                .address(passenger.getAddress())
+                .rideHistory(rideHistory)
+                .paymentHistory(paymentHistory)
+                .build();
     }
 }

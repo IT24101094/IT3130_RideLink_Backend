@@ -19,6 +19,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.ridelink.account_service.client.FarePaymentServiceClient;
+import com.ridelink.account_service.client.RideServiceClient;
+import com.ridelink.account_service.dto.PassengerProfileResponse;
+import com.ridelink.account_service.dto.PaymentHistoryDto;
+import com.ridelink.account_service.dto.RideHistoryDto;
+
+import java.util.List;
+
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
 
@@ -33,6 +41,12 @@ class AccountServiceTest {
 
     @Mock
     private JwtUtil jwtUtil;
+
+    @Mock
+    private RideServiceClient rideServiceClient;
+
+    @Mock
+    private FarePaymentServiceClient farePaymentServiceClient;
 
     @InjectMocks
     private AccountService accountService;
@@ -262,5 +276,58 @@ class AccountServiceTest {
         assertEquals("Nimal Driver", response.getName());
         assertEquals("driver@example.com", response.getEmail());
         assertEquals(com.ridelink.account_service.model.Role.DRIVER, response.getRole());
+    }
+
+    @Test
+    void shouldGetPassengerProfileSuccessfullyWithAggregatedData() {
+        when(passengerRepository.findById("p123")).thenReturn(Optional.of(passenger));
+
+        RideHistoryDto ride = RideHistoryDto.builder()
+                .id("ride1")
+                .passengerId("p123")
+                .driverId("d1")
+                .pickupLocation("A")
+                .destination("B")
+                .status("COMPLETED")
+                .finalFare(500.0)
+                .build();
+        when(rideServiceClient.getPassengerRideHistory("p123")).thenReturn(List.of(ride));
+
+        PaymentHistoryDto payment = PaymentHistoryDto.builder()
+                .id("pay1")
+                .orderId("ord1")
+                .rideId("ride1")
+                .passengerId("p123")
+                .fareAmount(500.0)
+                .paymentMethod("CARD")
+                .paymentStatus("PAID")
+                .build();
+        when(farePaymentServiceClient.getPassengerPaymentHistory("p123")).thenReturn(List.of(payment));
+
+        PassengerProfileResponse profile = accountService.getPassengerProfile("p123");
+
+        assertNotNull(profile);
+        assertEquals("p123", profile.getId());
+        assertEquals("John Doe", profile.getName());
+        assertEquals("john@example.com", profile.getEmail());
+        assertEquals("0771234567", profile.getPhone());
+        assertEquals(1, profile.getRideHistory().size());
+        assertEquals("ride1", profile.getRideHistory().get(0).getId());
+        assertEquals(1, profile.getPaymentHistory().size());
+        assertEquals("pay1", profile.getPaymentHistory().get(0).getId());
+    }
+
+    @Test
+    void shouldGetPassengerProfileWhenFeignClientsFail() {
+        when(passengerRepository.findById("p123")).thenReturn(Optional.of(passenger));
+        when(rideServiceClient.getPassengerRideHistory("p123")).thenThrow(new RuntimeException("Ride service down"));
+        when(farePaymentServiceClient.getPassengerPaymentHistory("p123")).thenThrow(new RuntimeException("Payment service down"));
+
+        PassengerProfileResponse profile = accountService.getPassengerProfile("p123");
+
+        assertNotNull(profile);
+        assertEquals("p123", profile.getId());
+        assertTrue(profile.getRideHistory().isEmpty());
+        assertTrue(profile.getPaymentHistory().isEmpty());
     }
 }
