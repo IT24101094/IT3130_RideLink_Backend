@@ -3,6 +3,7 @@ package com.ridelink.account_service.controller;
 import com.ridelink.account_service.dto.LoginRequest;
 import com.ridelink.account_service.dto.LoginResponse;
 import com.ridelink.account_service.dto.PassengerDto;
+import com.ridelink.account_service.dto.PassengerProfileResponse;
 import com.ridelink.account_service.dto.PassengerResponseDto;
 import com.ridelink.account_service.service.AccountService;
 import jakarta.validation.Valid;
@@ -42,6 +43,12 @@ public class AccountController {
     public ResponseEntity<PassengerDto> updatePassenger(@PathVariable String id, @Valid @RequestBody PassengerDto passengerDto) {
         PassengerDto updatedPassenger = accountService.updatePassenger(id, passengerDto);
         return ResponseEntity.ok(updatedPassenger);
+    }
+
+    @GetMapping("/{passengerId}/profile")
+    public ResponseEntity<PassengerProfileResponse> getPassengerProfile(@PathVariable String passengerId) {
+        PassengerProfileResponse response = accountService.getPassengerProfile(passengerId);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
