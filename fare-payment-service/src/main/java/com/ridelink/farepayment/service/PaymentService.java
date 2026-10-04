@@ -1,9 +1,13 @@
 package com.ridelink.farepayment.service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.ridelink.farepayment.dto.DriverPaymentStatsDto;
 
 import com.ridelink.farepayment.model.Fare;
 import com.ridelink.farepayment.model.Payment;
@@ -91,5 +95,56 @@ public class PaymentService {
         Payment payment = getPaymentById(id);
 
         return payment.getPaymentStatus();
+    }
+
+    // Fetch a list of payment records for a given passengerId
+    public List<Payment> getPaymentsByPassengerId(String passengerId) {
+        List<Payment> list = paymentRepository.findByPassengerId(passengerId);
+        if (list == null || list.isEmpty()) {
+            List<Payment> byUser = paymentRepository.findByUserId(passengerId);
+            if (byUser != null && !byUser.isEmpty()) {
+                return byUser;
+            }
+        }
+        return list != null ? list : Collections.emptyList();
+    }
+
+    public List<Payment> getPassengerPaymentHistory(String passengerId) {
+        return getPaymentsByPassengerId(passengerId);
+    }
+
+    // Calculate the total earnings and the split between cash and card payments for a given driverId
+    public DriverPaymentStatsDto getDriverStats(String driverId) {
+        List<Payment> payments = paymentRepository.findByDriverId(driverId);
+        double cashTotal = 0.0;
+        double cardTotal = 0.0;
+        double totalEarnings = 0.0;
+
+        if (payments != null) {
+            for (Payment p : payments) {
+                String status = p.getPaymentStatus();
+                if (status != null && ("FAILED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status))) {
+                    continue;
+                }
+
+                double amount = p.getFareAmount() > 0 ? p.getFareAmount() : p.getAmount();
+                if ("CASH".equalsIgnoreCase(p.getPaymentMethod())) {
+                    cashTotal += amount;
+                } else if ("CARD".equalsIgnoreCase(p.getPaymentMethod())) {
+                    cardTotal += amount;
+                }
+                totalEarnings += amount;
+            }
+        }
+
+        double roundedTotal = Math.round(totalEarnings * 100.0) / 100.0;
+        double roundedCash = Math.round(cashTotal * 100.0) / 100.0;
+        double roundedCard = Math.round(cardTotal * 100.0) / 100.0;
+
+        return new DriverPaymentStatsDto(driverId, roundedTotal, roundedCash, roundedCard);
+    }
+
+    public DriverPaymentStatsDto calculateDriverEarnings(String driverId) {
+        return getDriverStats(driverId);
     }
 }
