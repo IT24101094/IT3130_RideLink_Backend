@@ -4,6 +4,7 @@ import com.ridelink.ridelinkmanagementservice.client.AccountServiceClient;
 import com.ridelink.ridelinkmanagementservice.client.DriverServiceClient;
 import com.ridelink.ridelinkmanagementservice.client.FarePaymentServiceClient;
 import com.ridelink.ridelinkmanagementservice.dto.DriverDto;
+import com.ridelink.ridelinkmanagementservice.dto.DriverStatsDto;
 import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.exception.BadRequestException;
 import com.ridelink.ridelinkmanagementservice.exception.ResourceNotFoundException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -236,5 +238,32 @@ public class RideService {
     public Ride getRideById(String rideId) {
         return rideRepository.findById(rideId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ride not found with id: " + rideId));
+    }
+
+    public List<Ride> getPassengerRideHistory(String passengerId) {
+        return rideRepository.findByPassengerId(passengerId);
+    }
+
+    public List<Ride> getRideHistoryByPassengerId(String passengerId) {
+        return getPassengerRideHistory(passengerId);
+    }
+
+    public long getCompletedRidesCountForDriver(String driverId) {
+        List<Ride> rides = rideRepository.findByDriverId(driverId);
+        if (rides == null) {
+            return 0;
+        }
+        return rides.stream()
+                .filter(ride -> ride.getStatus() == RideStatus.COMPLETED)
+                .count();
+    }
+
+    public long getTotalCompletedRidesByDriverId(String driverId) {
+        return getCompletedRidesCountForDriver(driverId);
+    }
+
+    public DriverStatsDto getDriverStats(String driverId) {
+        long count = getCompletedRidesCountForDriver(driverId);
+        return new DriverStatsDto(driverId, count);
     }
 }
