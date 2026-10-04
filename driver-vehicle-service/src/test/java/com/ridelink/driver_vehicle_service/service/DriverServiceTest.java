@@ -11,6 +11,10 @@ import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.model.Vehicle;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 
+import com.ridelink.driver_vehicle_service.client.FarePaymentServiceClient;
+import com.ridelink.driver_vehicle_service.client.RideServiceClient;
+import com.ridelink.driver_vehicle_service.dto.DriverPaymentStatsDto;
+import com.ridelink.driver_vehicle_service.dto.DriverRideStatsDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +34,12 @@ class DriverServiceTest {
     @Mock
     private DriverRepository driverRepository;
 
+    @Mock
+    private RideServiceClient rideServiceClient;
+
+    @Mock
+    private FarePaymentServiceClient farePaymentServiceClient;
+
     private DriverService driverService;
 
     private Driver testDriver;
@@ -42,7 +52,7 @@ class DriverServiceTest {
     @BeforeEach
     void setUp() {
 
-        driverService = new DriverService(driverRepository);
+        driverService = new DriverService(driverRepository, rideServiceClient, farePaymentServiceClient);
 
         Vehicle vehicle = new Vehicle();
 
@@ -426,6 +436,12 @@ class DriverServiceTest {
         when(driverRepository.findById("DRV001"))
                 .thenReturn(Optional.of(testDriver));
 
+        when(rideServiceClient.getDriverStats("DRV001"))
+                .thenReturn(new DriverRideStatsDto("DRV001", 10));
+
+        when(farePaymentServiceClient.getDriverStats("DRV001"))
+                .thenReturn(new DriverPaymentStatsDto("DRV001", 5000.0, 2000.0, 3000.0));
+
         DriverProfileResponse response =
                 driverService.getDriverProfile("DRV001");
 
@@ -495,8 +511,56 @@ class DriverServiceTest {
                 response.getVehicle().getColor()
         );
 
+        assertEquals(
+                10L,
+                response.getTotalRides()
+        );
+
+        assertEquals(
+                5000.0,
+                response.getTotalEarnings()
+        );
+
+        assertEquals(
+                2000.0,
+                response.getCashPayments()
+        );
+
+        assertEquals(
+                3000.0,
+                response.getCardPayments()
+        );
+
+        assertNull(
+                response.getRating()
+        );
+
         verify(driverRepository, times(1))
                 .findById("DRV001");
+    }
+
+    @Test
+    void shouldReturnDriverProfileWithDefaultStatsWhenFeignClientsFail() {
+
+        when(driverRepository.findById("DRV001"))
+                .thenReturn(Optional.of(testDriver));
+
+        when(rideServiceClient.getDriverStats("DRV001"))
+                .thenThrow(new RuntimeException("Ride service unavailable"));
+
+        when(farePaymentServiceClient.getDriverStats("DRV001"))
+                .thenThrow(new RuntimeException("Fare service unavailable"));
+
+        DriverProfileResponse response =
+                driverService.getDriverProfile("DRV001");
+
+        assertNotNull(response);
+        assertEquals("DRV001", response.getId());
+        assertEquals(0L, response.getTotalRides());
+        assertEquals(0.0, response.getTotalEarnings());
+        assertEquals(0.0, response.getCashPayments());
+        assertEquals(0.0, response.getCardPayments());
+        assertNull(response.getRating());
     }
 
 

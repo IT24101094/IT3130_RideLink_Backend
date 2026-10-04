@@ -13,6 +13,15 @@ public class DriverProfileResponse {
     private Location currentLocation;
     private Vehicle vehicle;
 
+    // Aggregated stats from Feign clients
+    private long totalRides;
+    private double totalEarnings;
+    private double cashPayments;
+    private double cardPayments;
+
+    // Placeholder for ratings (not yet implemented)
+    private Double rating;
+
     public DriverProfileResponse() {
     }
 
@@ -48,6 +57,51 @@ public class DriverProfileResponse {
         this.serviceArea = serviceArea;
         this.currentLocation = currentLocation;
         this.vehicle = vehicle;
+    }
+
+    public DriverProfileResponse(
+            String id,
+            String licenseNumber,
+            boolean available,
+            String serviceArea,
+            Location currentLocation,
+            Vehicle vehicle,
+            long totalRides,
+            double totalEarnings,
+            double cashPayments,
+            double cardPayments,
+            Double rating) {
+
+        this(id, null, licenseNumber, available, serviceArea, currentLocation, vehicle,
+                totalRides, totalEarnings, cashPayments, cardPayments, rating);
+    }
+
+    public DriverProfileResponse(
+            String id,
+            String name,
+            String licenseNumber,
+            boolean available,
+            String serviceArea,
+            Location currentLocation,
+            Vehicle vehicle,
+            long totalRides,
+            double totalEarnings,
+            double cashPayments,
+            double cardPayments,
+            Double rating) {
+
+        this.id = id;
+        this.name = name;
+        this.licenseNumber = licenseNumber;
+        this.available = available;
+        this.serviceArea = serviceArea;
+        this.currentLocation = currentLocation;
+        this.vehicle = vehicle;
+        this.totalRides = totalRides;
+        this.totalEarnings = totalEarnings;
+        this.cashPayments = cashPayments;
+        this.cardPayments = cardPayments;
+        this.rating = rating;
     }
 
     public String getId() {
@@ -104,5 +158,53 @@ public class DriverProfileResponse {
 
     public void setVehicle(Vehicle vehicle) {
         this.vehicle = vehicle;
+    }
+
+    public long getTotalRides() {
+        return totalRides;
+    }
+
+    public void setTotalRides(long totalRides) {
+        this.totalRides = totalRides;
+    }
+
+    public double getTotalEarnings() {
+        return totalEarnings;
+    }
+
+    public void setTotalEarnings(double totalEarnings) {
+        this.totalEarnings = totalEarnings;
+    }
+
+    public double getCashPayments() {
+        return cashPayments;
+    }
+
+    public void setCashPayments(double cashPayments) {
+        this.cashPayments = cashPayments;
+    }
+
+    public double getCardPayments() {
+        return cardPayments;
+    }
+
+    public void setCardPayments(double cardPayments) {
+        this.cardPayments = cardPayments;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public Double getRatings() {
+        return rating;
+    }
+
+    public void setRatings(Double rating) {
+        this.rating = rating;
     }
 }

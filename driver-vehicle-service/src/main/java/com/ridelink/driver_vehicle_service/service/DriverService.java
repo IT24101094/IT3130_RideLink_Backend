@@ -10,6 +10,12 @@ import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.model.Location;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 
+import com.ridelink.driver_vehicle_service.client.FarePaymentServiceClient;
+import com.ridelink.driver_vehicle_service.client.RideServiceClient;
+import com.ridelink.driver_vehicle_service.dto.DriverPaymentStatsDto;
+import com.ridelink.driver_vehicle_service.dto.DriverRideStatsDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +24,23 @@ import java.util.List;
 @Service
 public class DriverService {
 
+    private static final Logger log = LoggerFactory.getLogger(DriverService.class);
+
     private final DriverRepository driverRepository;
+    private final RideServiceClient rideServiceClient;
+    private final FarePaymentServiceClient farePaymentServiceClient;
 
     @Autowired
-    public DriverService(DriverRepository driverRepository) {
+    public DriverService(DriverRepository driverRepository,
+                         RideServiceClient rideServiceClient,
+                         FarePaymentServiceClient farePaymentServiceClient) {
         this.driverRepository = driverRepository;
+        this.rideServiceClient = rideServiceClient;
+        this.farePaymentServiceClient = farePaymentServiceClient;
+    }
+
+    public DriverService(DriverRepository driverRepository) {
+        this(driverRepository, null, null);
     }
 
 
@@ -201,7 +219,7 @@ public class DriverService {
 
 
     // =========================================================
-    // GET FULL DRIVER PROFILE
+    // GET FULL DRIVER PROFILE (API COMPOSITION)
     // =========================================================
 
     public DriverProfileResponse getDriverProfile(String id) {
@@ -211,13 +229,49 @@ public class DriverService {
                         () -> new DriverNotFoundException(id)
                 );
 
+        long totalRides = 0;
+        if (rideServiceClient != null) {
+            try {
+                DriverRideStatsDto rideStats = rideServiceClient.getDriverStats(id);
+                if (rideStats != null) {
+                    totalRides = rideStats.getTotalRides();
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch ride stats for driver {}: {}", id, e.getMessage());
+            }
+        }
+
+        double totalEarnings = 0.0;
+        double cashPayments = 0.0;
+        double cardPayments = 0.0;
+        if (farePaymentServiceClient != null) {
+            try {
+                DriverPaymentStatsDto paymentStats = farePaymentServiceClient.getDriverStats(id);
+                if (paymentStats != null) {
+                    totalEarnings = paymentStats.getTotalEarnings();
+                    cashPayments = paymentStats.getCashTotal();
+                    cardPayments = paymentStats.getCardTotal();
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch payment stats for driver {}: {}", id, e.getMessage());
+            }
+        }
+
+        // Placeholder for ratings if not yet implemented
+        Double rating = null;
+
         return new DriverProfileResponse(
                 driver.getId(),
                 driver.getLicenseNumber(),
                 driver.isAvailable(),
                 driver.getServiceArea(),
                 driver.getCurrentLocation(),
-                driver.getVehicle()
+                driver.getVehicle(),
+                totalRides,
+                totalEarnings,
+                cashPayments,
+                cardPayments,
+                rating
         );
     }
 

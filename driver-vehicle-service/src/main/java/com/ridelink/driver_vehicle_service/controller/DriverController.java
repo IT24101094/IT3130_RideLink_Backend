@@ -171,19 +171,19 @@ public class DriverController {
 
 
     // =========================================================
-    // GET FULL DRIVER PROFILE
+    // GET FULL DRIVER PROFILE (API COMPOSITION)
     // =========================================================
 
     @Operation(
             summary = "Get full driver profile",
-            description = "Returns the driver's operational profile including availability, service area, current location and vehicle details"
+            description = "Returns the aggregated driver profile including driver info, vehicle details, ride stats, and payment stats"
     )
-    @GetMapping("/{id}/profile")
+    @GetMapping("/{driverId}/profile")
     public ResponseEntity<DriverProfileResponse> getDriverProfile(
-            @PathVariable String id) {
+            @PathVariable String driverId) {
 
         DriverProfileResponse profile =
-                driverService.getDriverProfile(id);
+                driverService.getDriverProfile(driverId);
 
         return ResponseEntity.ok(profile);
     }
