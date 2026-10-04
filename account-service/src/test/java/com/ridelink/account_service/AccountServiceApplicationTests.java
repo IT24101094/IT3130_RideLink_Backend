@@ -21,9 +21,6 @@ class AccountServiceApplicationTests {
     @Autowired
     private com.ridelink.account_service.util.JwtUtil jwtUtil;
 
-    @Autowired
-    private com.ridelink.account_service.repository.PassengerRepository passengerRepository;
-
     @Test
     void shouldRejectDuplicatePassengerEmail() throws Exception {
         String uniqueEmail = "dup" + System.currentTimeMillis() + "@example.com";
