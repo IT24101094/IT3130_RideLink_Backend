@@ -3,8 +3,10 @@ package com.ridelink.account_service.controller;
 import com.ridelink.account_service.dto.LoginRequest;
 import com.ridelink.account_service.dto.LoginResponse;
 import com.ridelink.account_service.dto.PassengerDto;
+import com.ridelink.account_service.dto.PassengerResponseDto;
 import com.ridelink.account_service.service.AccountService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping({"/api/passengers", "/api/accounts/passengers"})
+@SecurityRequirement(name = "Bearer Authentication")
 public class AccountController {
 
     @Autowired
@@ -30,9 +33,9 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PassengerDto> getPassenger(@PathVariable String id) {
+    public ResponseEntity<PassengerResponseDto> getPassenger(@PathVariable String id) {
         PassengerDto passengerDto = accountService.getPassengerById(id);
-        return ResponseEntity.ok(passengerDto);
+        return ResponseEntity.ok(PassengerResponseDto.fromDto(passengerDto));
     }
 
     @PutMapping("/{id}")

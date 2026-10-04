@@ -15,14 +15,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@Component
 public class JwtUtil {
 
     @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
-    private String secret;
+    private String secret = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     @Value("${jwt.expiration:86400000}")
-    private long expirationTime;
+    private long expirationTime = 86400000L;
 
     private Key getSigningKey() {
         byte[] keyBytes;
@@ -87,8 +86,40 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
+    public boolean validateToken(String token) {
+        try {
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+
+    public String extractRole(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Object role = claims.get("role");
+            return role != null ? role.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String extractUserId(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Object userId = claims.get("userId");
+            if (userId != null) {
+                return userId.toString();
+            }
+            Object driverId = claims.get("driverId");
+            return driverId != null ? driverId.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

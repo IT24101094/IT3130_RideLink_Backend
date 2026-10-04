@@ -1,5 +1,6 @@
 package com.ridelink.account_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,8 @@ public class Passenger {
     private String id;
     private String name;
     private String email;
+
+    @JsonIgnore
     private String password;
     private String phoneNumber;
     private String nic;

@@ -21,4 +21,13 @@ public class RideRequestDto {
 
     @Schema(description = "Payment method: CASH or CARD", example = "CASH")
     private String paymentMethod;
+
+    @Schema(description = "Estimated fare for the ride", example = "450.0")
+    private Double estimatedFare;
+
+    public RideRequestDto(String pickupLocation, String destination, String paymentMethod) {
+        this.pickupLocation = pickupLocation;
+        this.destination = destination;
+        this.paymentMethod = paymentMethod;
+    }
 }

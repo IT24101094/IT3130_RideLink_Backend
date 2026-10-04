@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -123,7 +124,41 @@ class RideServiceTest {
         assertEquals(700.0, updated.getFinalFare());
         assertEquals("CARD", updated.getPaymentMethod());
         verify(farePaymentServiceClient).calculateFare("ride123", "CARD");
-        verify(rideRepository, times(2)).save(sampleRide);
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void completeRide_UsesEstimatedFareWhenPresent() {
+        sampleRide.setEstimatedFare(450.0);
+        sampleRide.setPaymentMethod("CASH");
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(farePaymentServiceClient.calculateFare("ride123", "CASH")).thenReturn("{\"finalFare\": 700.0}");
+
+        Ride updated = rideService.completeRide("ride123");
+
+        assertEquals(RideStatus.COMPLETED, updated.getStatus());
+        assertNotNull(updated.getCompletedTime());
+        assertEquals(450.0, updated.getFinalFare());
+        assertEquals(450.0, updated.getEstimatedFare());
+        verify(farePaymentServiceClient).calculateFare("ride123", "CASH");
+        verify(rideRepository).save(sampleRide);
+    }
+
+    @Test
+    void completeRide_CalculatesFareFromDurationWhenNoEstimateAndClientFails() {
+        sampleRide.setEstimatedFare(null);
+        sampleRide.setStartTime(LocalDateTime.now().minusMinutes(20));
+        when(rideRepository.findById("ride123")).thenReturn(Optional.of(sampleRide));
+        when(rideRepository.save(any(Ride.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(farePaymentServiceClient.calculateFare(any(), any())).thenThrow(new RuntimeException("Service down"));
+
+        Ride updated = rideService.completeRide("ride123");
+
+        assertEquals(RideStatus.COMPLETED, updated.getStatus());
+        assertNotNull(updated.getCompletedTime());
+        assertTrue(updated.getFinalFare() >= 195.0 && updated.getFinalFare() <= 205.0);
+        verify(rideRepository).save(sampleRide);
     }
 
     @Test

@@ -13,6 +13,7 @@ import com.ridelink.ridelinkmanagementservice.repository.RideRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service
@@ -24,12 +25,13 @@ public class RideService {
     private final DriverServiceClient driverServiceClient;
     private final FarePaymentServiceClient farePaymentServiceClient;
 
-    public Ride createRideRequest(String passengerId, String pickupLocation, String destination, String paymentMethod) {
+    public Ride createRideRequest(String passengerId, String pickupLocation, String destination, String paymentMethod, Double estimatedFare) {
         Ride ride = new Ride();
         ride.setPassengerId(passengerId);
         ride.setPickupLocation(pickupLocation);
         ride.setDestination(destination);
         ride.setPaymentMethod(paymentMethod != null && !paymentMethod.isBlank() ? paymentMethod : "CASH");
+        ride.setEstimatedFare(estimatedFare);
         ride.setStatus(RideStatus.REQUESTED);
         ride.setRequestedTime(LocalDateTime.now());
 
@@ -41,8 +43,12 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
+    public Ride createRideRequest(String passengerId, String pickupLocation, String destination, String paymentMethod) {
+        return createRideRequest(passengerId, pickupLocation, destination, paymentMethod, null);
+    }
+
     public Ride createRideRequest(String passengerId, String pickupLocation, String destination) {
-        return createRideRequest(passengerId, pickupLocation, destination, "CASH");
+        return createRideRequest(passengerId, pickupLocation, destination, "CASH", null);
     }
 
     public Ride assignDriver(String rideId, String driverId) {
@@ -122,16 +128,45 @@ public class RideService {
 
         ride.setStatus(RideStatus.COMPLETED);
         ride.setCompletedTime(LocalDateTime.now());
-        Ride savedRide = rideRepository.save(ride);
 
-        String fareResponse = farePaymentServiceClient.calculateFare(savedRide.getId(), savedRide.getPaymentMethod());
-        System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + savedRide.getId() + " | PaymentMethod: " + savedRide.getPaymentMethod() + " | Response: " + fareResponse + " ---");
-
-        Double finalFare = parseFare(fareResponse);
-        if (finalFare != null) {
-            savedRide.setFinalFare(finalFare);
+        // 1. Check if the ride already has an estimated fare (> 0)
+        Double finalFare = null;
+        if (ride.getEstimatedFare() != null && ride.getEstimatedFare() > 0) {
+            finalFare = ride.getEstimatedFare();
         }
-        return rideRepository.save(savedRide);
+
+        // 2. Fetch or trigger fare calculation from fare-payment-service via Feign client
+        try {
+            String fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
+            System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + ride.getId()
+                    + " | PaymentMethod: " + ride.getPaymentMethod() + " | Response: " + fareResponse + " ---");
+
+            // If finalFare was not already determined from estimatedFare, parse from Feign response
+            if (finalFare == null) {
+                finalFare = parseFare(fareResponse);
+            }
+        } catch (Exception e) {
+            System.err.println("--- Failed to calculate fare via FarePaymentServiceClient for Ride ID: " + ride.getId() + " - " + e.getMessage() + " ---");
+        }
+
+        // 3. Fallback: calculate based on actual duration if available, or default base fare
+        if (finalFare == null) {
+            if (ride.getStartTime() != null && ride.getCompletedTime() != null) {
+                long durationMinutes = Duration.between(ride.getStartTime(), ride.getCompletedTime()).toMinutes();
+                // Base fare: 100.0, per minute: 5.0 (minimum 1 minute)
+                finalFare = 100.0 + (Math.max(1, durationMinutes) * 5.0);
+            } else {
+                finalFare = 100.0;
+            }
+        }
+
+        // 4. Properly set the finalFare field in the Ride model before saving it to the database
+        ride.setFinalFare(finalFare);
+        if (ride.getEstimatedFare() == null) {
+            ride.setEstimatedFare(finalFare);
+        }
+
+        return rideRepository.save(ride);
     }
 
     private Double parseFare(String fareResponse) {
