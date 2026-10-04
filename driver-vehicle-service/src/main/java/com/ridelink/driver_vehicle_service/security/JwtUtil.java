@@ -1,7 +1,8 @@
-package com.ridelink.ridelinkmanagementservice.security;
+package com.ridelink.driver_vehicle_service.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
@@ -17,6 +20,17 @@ public class JwtUtil {
 
     @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
     private String secret;
+
+    @Value("${jwt.expiration:86400000}")
+    private long expirationTime;
+
+    public JwtUtil() {
+    }
+
+    public JwtUtil(String secret, long expirationTime) {
+        this.secret = secret;
+        this.expirationTime = expirationTime;
+    }
 
     private Key getSigningKey() {
         byte[] keyBytes;
@@ -31,30 +45,31 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(java.util.Map<String, Object> extraClaims, String subject) {
-        return io.jsonwebtoken.Jwts.builder()
+    public String generateToken(Map<String, Object> extraClaims, String subject) {
+        return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
-                .signWith(getSigningKey(), io.jsonwebtoken.SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String generatePassengerToken(String userId, String username) {
-        java.util.Map<String, Object> claims = new java.util.HashMap<>();
-        claims.put("userId", userId);
-        claims.put("role", "ROLE_PASSENGER");
-        return generateToken(claims, username);
-    }
-
     public String generateDriverToken(String driverId, String licenseNumber, String name) {
-        java.util.Map<String, Object> claims = new java.util.HashMap<>();
+        Map<String, Object> claims = new HashMap<>();
         claims.put("driverId", driverId);
+        claims.put("userId", driverId);
         claims.put("licenseNumber", licenseNumber);
         claims.put("name", name);
         claims.put("role", "DRIVER");
         return generateToken(claims, licenseNumber != null ? licenseNumber : driverId);
+    }
+
+    public String generatePassengerToken(String userId, String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", "ROLE_PASSENGER");
+        return generateToken(claims, username);
     }
 
     public Claims extractAllClaims(String token) {
@@ -82,7 +97,7 @@ public class JwtUtil {
         try {
             return extractExpiration(token).before(new Date());
         } catch (Exception e) {
-            return false;
+            return true;
         }
     }
 
@@ -90,6 +105,15 @@ public class JwtUtil {
         try {
             extractAllClaims(token);
             return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean validateToken(String token, String username) {
+        try {
+            final String extractedUsername = extractUsername(token);
+            return (extractedUsername.equals(username) && !isTokenExpired(token));
         } catch (Exception e) {
             return false;
         }

@@ -8,6 +8,7 @@ import com.ridelink.driver_vehicle_service.dto.DriverResponse;
 import com.ridelink.driver_vehicle_service.service.DriverService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/drivers")
+@SecurityRequirement(name = "Bearer Authentication")
 @Tag(
         name = "Driver & Vehicle Management",
         description = "APIs for managing drivers, vehicles, availability, service areas and simulated current locations"

@@ -12,10 +12,12 @@ import com.ridelink.farepayment.dto.PaymentRequestDto;
 import com.ridelink.farepayment.model.Payment;
 import com.ridelink.farepayment.service.PaymentService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/payments")
+@SecurityRequirement(name = "Bearer Authentication")
 public class PaymentController {
 
     private final PaymentService paymentService;

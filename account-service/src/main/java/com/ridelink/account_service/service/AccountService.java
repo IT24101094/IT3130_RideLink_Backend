@@ -107,6 +107,10 @@ public class AccountService {
     }
 
     public PassengerDto createPassenger(PassengerDto passengerDto) {
+        if (passengerDto.getEmail() != null && passengerRepository.existsByEmail(passengerDto.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
         String hashedPassword = passengerDto.getPassword() != null
                 ? passwordEncoder.encode(passengerDto.getPassword())
                 : null;

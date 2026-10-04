@@ -84,6 +84,19 @@ class AccountServiceTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenCreatingPassengerWithExistingEmail() {
+        when(passengerRepository.existsByEmail("john@example.com")).thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> accountService.createPassenger(passengerDto)
+        );
+
+        assertEquals("Email is already registered", exception.getMessage());
+        verify(passengerRepository, never()).save(any(Passenger.class));
+    }
+
+    @Test
     void shouldGetPassengerByIdSuccessfully() {
         when(passengerRepository.findById("p123")).thenReturn(Optional.of(passenger));
 

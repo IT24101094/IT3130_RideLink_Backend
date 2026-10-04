@@ -2,7 +2,6 @@ package com.ridelink.ridelinkmanagementservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ridelink.ridelinkmanagementservice.controller.RideController;
-import com.ridelink.ridelinkmanagementservice.dto.PassengerDto;
 import com.ridelink.ridelinkmanagementservice.dto.RideRequestDto;
 import com.ridelink.ridelinkmanagementservice.exception.BadRequestException;
 import com.ridelink.ridelinkmanagementservice.exception.GlobalExceptionHandler;

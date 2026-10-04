@@ -4,6 +4,7 @@ import com.ridelink.ridelinkmanagementservice.dto.RideRequestDto;
 import com.ridelink.ridelinkmanagementservice.model.Ride;
 import com.ridelink.ridelinkmanagementservice.model.RideStatus;
 import com.ridelink.ridelinkmanagementservice.service.RideService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/rides")
+@SecurityRequirement(name = "Bearer Authentication")
 @RequiredArgsConstructor
 public class RideController {
 
@@ -42,12 +44,18 @@ public class RideController {
 
         String passengerId = resolvePassengerId(authHeader, xPassengerId, passengerIdHeader, passengerIdParam);
 
-        Ride createdRide = rideService.createRideRequest(
-                passengerId,
-                request.getPickupLocation(),
-                request.getDestination(),
-                request.getPaymentMethod()
-        );
+        Ride createdRide = (request.getEstimatedFare() != null)
+                ? rideService.createRideRequest(
+                        passengerId,
+                        request.getPickupLocation(),
+                        request.getDestination(),
+                        request.getPaymentMethod(),
+                        request.getEstimatedFare())
+                : rideService.createRideRequest(
+                        passengerId,
+                        request.getPickupLocation(),
+                        request.getDestination(),
+                        request.getPaymentMethod());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRide);
     }
 

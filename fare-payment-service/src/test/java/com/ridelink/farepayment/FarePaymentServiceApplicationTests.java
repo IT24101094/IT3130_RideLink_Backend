@@ -12,7 +12,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.ridelink.farepayment.model.Fare;
 import com.ridelink.farepayment.model.Payment;
+import com.ridelink.farepayment.repository.FareRepository;
 import com.ridelink.farepayment.repository.PaymentRepository;
 import com.ridelink.farepayment.service.PaymentService;
 
@@ -22,12 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FarePaymentServiceApplicationTests {
 
     private PaymentRepository paymentRepository;
+    private FareRepository fareRepository;
     private PaymentService paymentService;
 
     @BeforeEach
     void setUp() {
         paymentRepository = mock(PaymentRepository.class);
-        paymentService = new PaymentService(paymentRepository);
+        fareRepository = mock(FareRepository.class);
+        paymentService = new PaymentService(paymentRepository, fareRepository);
     }
 
     @Test
@@ -48,6 +52,8 @@ class FarePaymentServiceApplicationTests {
 
         assertEquals("PAID", result.getPaymentStatus());
         assertNotNull(result.getTransactionId());
+        assertEquals(700.0, result.getFareAmount());
+        assertEquals(700.0, result.getAmount());
         assertTrue(result.getFareAmount() >= 400.0 && result.getFareAmount() <= 2500.0);
         assertEquals(result.getFareAmount(), Math.round(result.getFareAmount() * 100.0) / 100.0);
 
@@ -71,10 +77,61 @@ class FarePaymentServiceApplicationTests {
         Payment result = paymentService.processPayment(payment);
 
         assertEquals("PAID", result.getPaymentStatus());
+        assertEquals(700.0, result.getFareAmount());
+        assertEquals(700.0, result.getAmount());
         assertTrue(result.getFareAmount() >= 400.0 && result.getFareAmount() <= 2500.0);
         assertEquals(result.getFareAmount(), Math.round(result.getFareAmount() * 100.0) / 100.0);
         assertNull(result.getTransactionId());
 
+        verify(paymentRepository, times(1)).save(payment);
+    }
+
+    @Test
+    void processPayment_shouldUseFareFromFareRepositoryWhenAvailable() {
+        Fare calculatedFare = new Fare();
+        calculatedFare.setRideId("RIDE003");
+        calculatedFare.setFinalFare(450.0);
+
+        when(fareRepository.findFirstByRideIdOrderByIdDesc("RIDE003"))
+                .thenReturn(Optional.of(calculatedFare));
+
+        Payment payment = new Payment(
+                "ORDER003",
+                "RIDE003",
+                "USER003",
+                0.0,
+                "CARD",
+                "PENDING"
+        );
+
+        when(paymentRepository.save(payment)).thenReturn(payment);
+
+        Payment result = paymentService.processPayment(payment);
+
+        assertEquals(450.0, result.getFareAmount());
+        assertEquals(450.0, result.getAmount());
+        assertEquals("PAID", result.getPaymentStatus());
+        verify(paymentRepository, times(1)).save(payment);
+    }
+
+    @Test
+    void processPayment_shouldUsePassedFareAmountFromRide() {
+        Payment payment = new Payment(
+                "ORDER004",
+                "RIDE004",
+                "USER004",
+                320.50,
+                "CASH",
+                "PENDING"
+        );
+
+        when(paymentRepository.save(payment)).thenReturn(payment);
+
+        Payment result = paymentService.processPayment(payment);
+
+        assertEquals(320.50, result.getFareAmount());
+        assertEquals(320.50, result.getAmount());
+        assertEquals("PAID", result.getPaymentStatus());
         verify(paymentRepository, times(1)).save(payment);
     }
 

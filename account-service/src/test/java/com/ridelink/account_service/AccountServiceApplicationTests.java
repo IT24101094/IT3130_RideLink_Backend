@@ -22,6 +22,35 @@ class AccountServiceApplicationTests {
     private com.ridelink.account_service.util.JwtUtil jwtUtil;
 
     @Test
+    void shouldRejectDuplicatePassengerEmail() throws Exception {
+        String uniqueEmail = "dup" + System.currentTimeMillis() + "@example.com";
+        String passengerJson = String.format("""
+                {
+                    "name": "Duplicate Test",
+                    "email": "%s",
+                    "password": "Password123",
+                    "phoneNumber": "0771234567",
+                    "nic": "200012345678",
+                    "address": "Colombo"
+                }
+                """, uniqueEmail);
+
+        mockMvc.perform(post("/api/passengers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(passengerJson))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/passengers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(passengerJson))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Email is already registered"));
+    }
+
+
+
+    @Test
     void contextLoads() {
     }
 
