@@ -11,4 +11,6 @@ public interface FareRepository extends MongoRepository<Fare, String> {
     Optional<Fare> findByRideId(String rideId);
 
     Optional<Fare> findFirstByRideIdOrderByIdDesc(String rideId);
+
+    Optional<Fare> findFirstByUserIdOrderByIdDesc(String userId);
 }

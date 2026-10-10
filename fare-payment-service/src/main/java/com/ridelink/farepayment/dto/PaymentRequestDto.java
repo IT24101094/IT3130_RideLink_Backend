@@ -19,7 +19,6 @@ public class PaymentRequestDto {
 
     private double amount;
 
-    @NotBlank(message = "Payment method is required")
     private String paymentMethod;
 
     private String paymentStatus;

@@ -2,6 +2,7 @@ package com.ridelink.farepayment.controller;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,9 +24,30 @@ public class FareController {
         this.fareService = fareService;
     }
 
+    @GetMapping("/latest-estimate")
+    public ResponseEntity<Fare> getLatestEstimate(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String passengerId) {
+
+        String targetUserId = (userId != null && !userId.isBlank()) ? userId : passengerId;
+        if (targetUserId == null || targetUserId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return fareService.getLatestEstimateByUserId(targetUserId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/calculate")
     public ResponseEntity<Fare> calculateFare(
-            @RequestParam String rideId) {
+            @RequestParam String rideId,
+            @RequestParam(required = false) String paymentMethod) {
+
+        java.util.Optional<Fare> existingFare = fareService.getFareByRideId(rideId);
+        if (existingFare.isPresent()) {
+            return ResponseEntity.ok(existingFare.get());
+        }
 
         Fare fare = new Fare();
 

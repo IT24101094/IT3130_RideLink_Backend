@@ -35,7 +35,17 @@ public class FareService {
                 + (fare.getDurationMinutes() * fare.getPerMinuteRate());
 
         fare.setEstimatedFare(estimatedFare);
+        fare.setFinalFare(estimatedFare);
 
-        return fare;
+        return fareRepository.save(fare);
+    }
+
+    public java.util.Optional<Fare> getLatestEstimateByUserId(String userId) {
+        return fareRepository.findFirstByUserIdOrderByIdDesc(userId);
+    }
+
+    public java.util.Optional<Fare> getFareByRideId(String rideId) {
+        return fareRepository.findFirstByRideIdOrderByIdDesc(rideId)
+                .or(() -> fareRepository.findByRideId(rideId));
     }
 }

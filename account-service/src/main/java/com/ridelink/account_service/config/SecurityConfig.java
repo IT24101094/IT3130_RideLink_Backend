@@ -54,8 +54,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/accounts/drivers/login", "/api/drivers/accounts/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/accounts/drivers", "/api/drivers/accounts").permitAll()
 
-                        // Passenger retrieval strictly requires authentication
-                        .requestMatchers(HttpMethod.GET, "/api/passengers/**", "/api/accounts/passengers/**").authenticated()
+                        // Passenger endpoints strictly require PASSENGER or ADMIN authority (Drivers are forbidden)
+                        .requestMatchers(HttpMethod.GET, "/api/passengers/**", "/api/accounts/passengers/**").hasAnyAuthority("ROLE_PASSENGER", "PASSENGER", "ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/passengers/**", "/api/accounts/passengers/**").hasAnyAuthority("ROLE_PASSENGER", "PASSENGER", "ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/passengers/**", "/api/accounts/passengers/**").hasAnyAuthority("ROLE_PASSENGER", "PASSENGER", "ROLE_ADMIN", "ADMIN")
 
                         // Any other request must be authenticated
                         .anyRequest().authenticated()
