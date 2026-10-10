@@ -139,7 +139,7 @@ public class RideService {
 
         // 2. Fetch or trigger fare calculation from fare-payment-service via Feign client
         try {
-            String fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
+            Object fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
             System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + ride.getId()
                     + " | PaymentMethod: " + ride.getPaymentMethod() + " | Response: " + fareResponse + " ---");
 
@@ -171,16 +171,42 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    private Double parseFare(String fareResponse) {
-        if (fareResponse == null || fareResponse.isBlank()) {
+    private Double parseFare(Object fareResponse) {
+        if (fareResponse == null) {
+            return null;
+        }
+        if (fareResponse instanceof Number number) {
+            return number.doubleValue();
+        }
+        if (fareResponse instanceof java.util.Map<?, ?> map) {
+            Object finalFare = map.get("finalFare");
+            if (finalFare instanceof Number num) return num.doubleValue();
+            if (finalFare != null) {
+                try { return Double.valueOf(finalFare.toString()); } catch (Exception ignored) {}
+            }
+            Object estimatedFare = map.get("estimatedFare");
+            if (estimatedFare instanceof Number num) return num.doubleValue();
+            if (estimatedFare != null) {
+                try { return Double.valueOf(estimatedFare.toString()); } catch (Exception ignored) {}
+            }
+            Object amount = map.get("amount");
+            if (amount instanceof Number num) return num.doubleValue();
+            if (amount != null) {
+                try { return Double.valueOf(amount.toString()); } catch (Exception ignored) {}
+            }
+            return null;
+        }
+
+        String str = fareResponse.toString();
+        if (str.isBlank()) {
             return null;
         }
         try {
-            return Double.valueOf(fareResponse.trim());
+            return Double.valueOf(str.trim());
         } catch (NumberFormatException ignored) {
         }
         try {
-            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(fareResponse);
+            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(str);
             if (node.has("finalFare") && !node.get("finalFare").isNull()) {
                 return node.get("finalFare").asDouble();
             }

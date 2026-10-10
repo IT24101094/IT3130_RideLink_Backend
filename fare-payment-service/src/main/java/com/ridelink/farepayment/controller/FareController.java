@@ -25,7 +25,8 @@ public class FareController {
 
     @PostMapping("/calculate")
     public ResponseEntity<Fare> calculateFare(
-            @RequestParam String rideId) {
+            @RequestParam String rideId,
+            @RequestParam(required = false) String paymentMethod) {
 
         Fare fare = new Fare();
 

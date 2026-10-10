@@ -483,7 +483,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});"
+                  "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nvar jsonData = pm.response.json();\r\nif (jsonData.estimatedFare) {\r\n    pm.environment.set(\"estimatedFare\", jsonData.estimatedFare);\r\n}"
                 ]
               }
             }
@@ -559,7 +559,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"pickupLocation\": \"Colombo\",\r\n    \"destination\": \"Malabe\",\r\n    \"paymentMethod\": \"CARD\"\r\n}",
+              "raw": "{\r\n    \"pickupLocation\": \"Colombo\",\r\n    \"destination\": \"Malabe\",\r\n    \"paymentMethod\": \"CARD\",\r\n    \"estimatedFare\": {{estimatedFare}}\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -761,7 +761,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});"
+                  "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nvar jsonData = pm.response.json();\r\nif (jsonData.finalFare) {\r\n    pm.environment.set(\"finalFare\", jsonData.finalFare);\r\n    pm.environment.set(\"fareAmount\", jsonData.finalFare);\r\n}"
                 ]
               }
             }
@@ -835,7 +835,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"orderId\": \"ord-12345\",\r\n    \"rideId\": \"{{rideId}}\",\r\n    \"passengerId\": \"{{passengerId}}\",\r\n    \"fareAmount\": 700.0,\r\n    \"paymentMethod\": \"CARD\",\r\n    \"paymentStatus\": \"SUCCESS\"\r\n}",
+              "raw": "{\r\n    \"orderId\": \"ord-12345\",\r\n    \"rideId\": \"{{rideId}}\",\r\n    \"passengerId\": \"{{passengerId}}\",\r\n    \"fareAmount\": {{fareAmount}},\r\n    \"paymentMethod\": \"CARD\",\r\n    \"paymentStatus\": \"SUCCESS\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -11,7 +11,7 @@ class FarePaymentServiceClientFallbackTest {
 
     @Test
     void calculateFare_ReturnsMockResponse() {
-        String result = fallback.calculateFare("ride-123", "CASH");
+        Object result = fallback.calculateFare("ride-123", "CASH");
 
         assertNotNull(result);
         assertEquals("Mock Fare Calculation Triggered", result);
