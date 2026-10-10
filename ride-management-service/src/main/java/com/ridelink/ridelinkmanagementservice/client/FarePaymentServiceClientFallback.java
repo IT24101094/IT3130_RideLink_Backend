@@ -9,4 +9,9 @@ public class FarePaymentServiceClientFallback implements FarePaymentServiceClien
     public Object calculateFare(String rideId, String paymentMethod) {
         return "Mock Fare Calculation Triggered";
     }
+
+    @Override
+    public Object getLatestEstimate(String userId) {
+        return null;
+    }
 }

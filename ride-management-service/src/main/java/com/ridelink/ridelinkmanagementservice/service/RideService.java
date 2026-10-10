@@ -33,6 +33,23 @@ public class RideService {
         ride.setPickupLocation(pickupLocation);
         ride.setDestination(destination);
         ride.setPaymentMethod(paymentMethod != null && !paymentMethod.isBlank() ? paymentMethod : "CASH");
+
+        // If estimatedFare was not provided, fetch the passenger's latest estimate from fare-payment-service
+        if (estimatedFare == null || estimatedFare <= 0) {
+            try {
+                if (passengerId != null && !passengerId.isBlank()) {
+                    Object estimateObj = farePaymentServiceClient.getLatestEstimate(passengerId);
+                    Double est = parseFare(estimateObj);
+                    if (est != null && est > 0) {
+                        estimatedFare = est;
+                        System.out.println("--- Auto-populated estimatedFare (" + estimatedFare + ") from latest estimate for passenger: " + passengerId + " ---");
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("--- Failed to fetch latest estimate for passenger " + passengerId + ": " + e.getMessage() + " ---");
+            }
+        }
+
         ride.setEstimatedFare(estimatedFare);
         ride.setStatus(RideStatus.REQUESTED);
         ride.setRequestedTime(LocalDateTime.now());
@@ -137,21 +154,31 @@ public class RideService {
             finalFare = ride.getEstimatedFare();
         }
 
-        // 2. Fetch or trigger fare calculation from fare-payment-service via Feign client
-        try {
-            Object fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
-            System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + ride.getId()
-                    + " | PaymentMethod: " + ride.getPaymentMethod() + " | Response: " + fareResponse + " ---");
-
-            // If finalFare was not already determined from estimatedFare, parse from Feign response
-            if (finalFare == null) {
-                finalFare = parseFare(fareResponse);
-            }
-        } catch (Exception e) {
-            System.err.println("--- Failed to calculate fare via FarePaymentServiceClient for Ride ID: " + ride.getId() + " - " + e.getMessage() + " ---");
+        // 2. If estimatedFare is missing on the ride, attempt to retrieve the passenger's latest estimate
+        if (finalFare == null && ride.getPassengerId() != null && !ride.getPassengerId().isBlank()) {
+            try {
+                Object estimateObj = farePaymentServiceClient.getLatestEstimate(ride.getPassengerId());
+                Double est = parseFare(estimateObj);
+                if (est != null && est > 0) {
+                    finalFare = est;
+                    ride.setEstimatedFare(est);
+                }
+            } catch (Exception ignored) {}
         }
 
-        // 3. Fallback: calculate based on actual duration if available, or default base fare
+        // 3. Fetch or trigger fare calculation from fare-payment-service via Feign client
+        if (finalFare == null) {
+            try {
+                Object fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
+                System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + ride.getId()
+                        + " | PaymentMethod: " + ride.getPaymentMethod() + " | Response: " + fareResponse + " ---");
+                finalFare = parseFare(fareResponse);
+            } catch (Exception e) {
+                System.err.println("--- Failed to calculate fare via FarePaymentServiceClient for Ride ID: " + ride.getId() + " - " + e.getMessage() + " ---");
+            }
+        }
+
+        // 4. Fallback: calculate based on actual duration if available, or default base fare
         if (finalFare == null) {
             if (ride.getStartTime() != null && ride.getCompletedTime() != null) {
                 long durationMinutes = Duration.between(ride.getStartTime(), ride.getCompletedTime()).toMinutes();
@@ -162,9 +189,9 @@ public class RideService {
             }
         }
 
-        // 4. Properly set the finalFare field in the Ride model before saving it to the database
+        // 5. Properly set the finalFare field and ensure estimatedFare matches
         ride.setFinalFare(finalFare);
-        if (ride.getEstimatedFare() == null) {
+        if (ride.getEstimatedFare() == null || ride.getEstimatedFare() <= 0) {
             ride.setEstimatedFare(finalFare);
         }
 

@@ -815,7 +815,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nvar jsonData = pm.response.json();\r\nif (jsonData.id) {\r\n    pm.environment.set(\"paymentId\", jsonData.id);\r\n}"
+                  "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nvar jsonData = pm.response.json();\r\nif (jsonData.id) {\r\n    pm.environment.set(\"paymentId\", jsonData.id);\r\n}\r\npm.test(\"Ride details and payable amount auto-populated\", function () {\r\n    pm.expect(jsonData.rideId).to.eql(pm.environment.get(\"rideId\"));\r\n    pm.expect(jsonData.fareAmount).to.be.above(0);\r\n    pm.expect(jsonData.passengerId).to.not.be.empty;\r\n});"
                 ]
               }
             }
@@ -835,7 +835,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"orderId\": \"ord-12345\",\r\n    \"rideId\": \"{{rideId}}\",\r\n    \"passengerId\": \"{{passengerId}}\",\r\n    \"fareAmount\": {{fareAmount}},\r\n    \"paymentMethod\": \"CARD\",\r\n    \"paymentStatus\": \"SUCCESS\"\r\n}",
+              "raw": "{\r\n    \"orderId\": \"ord-12345\",\r\n    \"rideId\": \"{{rideId}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -962,6 +962,16 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {

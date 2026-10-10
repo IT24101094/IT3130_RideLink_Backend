@@ -53,6 +53,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/rides/*/complete").hasAnyAuthority("ROLE_DRIVER", "DRIVER")
                         .requestMatchers(HttpMethod.PUT, "/api/rides/*/assign").hasAnyAuthority("ROLE_DRIVER", "DRIVER")
 
+                        // Allow GET /api/rides/* for ride details & inter-service lookups
+                        .requestMatchers(HttpMethod.GET, "/api/rides/*").permitAll()
+
                         // Passenger ride history and driver stats endpoints (require JWT authentication)
                         .requestMatchers(HttpMethod.GET, "/api/rides/passenger/*/history", "/api/rides/passenger/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/rides/driver/*/stats", "/api/rides/driver/**").authenticated()

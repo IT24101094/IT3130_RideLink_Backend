@@ -11,4 +11,8 @@ public interface FarePaymentServiceClient {
     Object calculateFare(
             @RequestParam("rideId") String rideId,
             @RequestParam(value = "paymentMethod", required = false) String paymentMethod);
+
+    @org.springframework.web.bind.annotation.GetMapping("/api/fares/latest-estimate")
+    Object getLatestEstimate(
+            @RequestParam("userId") String userId);
 }

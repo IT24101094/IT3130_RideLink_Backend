@@ -34,24 +34,28 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ROLE_PASSENGER', 'PASSENGER', 'ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<PassengerResponseDto> getPassenger(@PathVariable String id) {
         PassengerDto passengerDto = accountService.getPassengerById(id);
         return ResponseEntity.ok(PassengerResponseDto.fromDto(passengerDto));
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ROLE_PASSENGER', 'PASSENGER', 'ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<PassengerDto> updatePassenger(@PathVariable String id, @Valid @RequestBody PassengerDto passengerDto) {
         PassengerDto updatedPassenger = accountService.updatePassenger(id, passengerDto);
         return ResponseEntity.ok(updatedPassenger);
     }
 
     @GetMapping("/{passengerId}/profile")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ROLE_PASSENGER', 'PASSENGER', 'ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<PassengerProfileResponse> getPassengerProfile(@PathVariable String passengerId) {
         PassengerProfileResponse response = accountService.getPassengerProfile(passengerId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ROLE_PASSENGER', 'PASSENGER', 'ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<Void> deletePassenger(@PathVariable String id) {
         accountService.deletePassenger(id);
         return ResponseEntity.noContent().build();

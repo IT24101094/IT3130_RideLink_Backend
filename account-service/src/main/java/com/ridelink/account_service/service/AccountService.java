@@ -150,7 +150,7 @@ public class AccountService {
                 : null;
 
         Passenger passenger = new Passenger(
-                passengerDto.getId(),
+                null, // Enforce fresh unique ID generation by MongoDB
                 passengerDto.getName(),
                 passengerDto.getEmail(),
                 hashedPassword,

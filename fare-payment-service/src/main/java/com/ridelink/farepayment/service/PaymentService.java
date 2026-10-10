@@ -33,20 +33,82 @@ public class PaymentService {
     // Process and save payment
     public Payment processPayment(Payment payment) {
 
-        // 1. Determine accurate fareAmount
+        // Auto-fetch ride details from ride-management-service if rideId is provided
+        java.util.Map<String, Object> rideData = null;
+        if (payment.getRideId() != null && !payment.getRideId().isBlank()) {
+            try {
+                org.springframework.web.client.RestClient client = org.springframework.web.client.RestClient.builder()
+                        .baseUrl("http://localhost:8083")
+                        .build();
+                rideData = client.get()
+                        .uri("/api/rides/{id}", payment.getRideId())
+                        .retrieve()
+                        .body(java.util.Map.class);
+            } catch (Exception e) {
+                System.err.println("--- PaymentService: Failed to fetch ride details for Ride ID " + payment.getRideId() + ": " + e.getMessage() + " ---");
+            }
+        }
+
+        // Auto-populate ride details from the ride record
+        if (rideData != null) {
+            // Auto-populate passengerId / userId
+            if ((payment.getPassengerId() == null || payment.getPassengerId().isBlank()) && rideData.get("passengerId") != null) {
+                String pId = rideData.get("passengerId").toString();
+                payment.setPassengerId(pId);
+                payment.setUserId(pId);
+            }
+            // Auto-populate driverId
+            if ((payment.getDriverId() == null || payment.getDriverId().isBlank()) && rideData.get("driverId") != null) {
+                payment.setDriverId(rideData.get("driverId").toString());
+            }
+            // Auto-populate paymentMethod
+            if ((payment.getPaymentMethod() == null || payment.getPaymentMethod().isBlank()) && rideData.get("paymentMethod") != null) {
+                payment.setPaymentMethod(rideData.get("paymentMethod").toString());
+            }
+        }
+
+        // Default payment method to CARD if still not set
+        if (payment.getPaymentMethod() == null || payment.getPaymentMethod().isBlank()) {
+            payment.setPaymentMethod("CARD");
+        }
+
+        // 1. Determine accurate fareAmount / payable amount
         double finalFare = 0.0;
 
-        // Check if an explicit positive fareAmount was passed from the ride
-        if (payment.getFareAmount() > 0) {
-            finalFare = payment.getFareAmount();
-        } else if (payment.getAmount() > 0) {
-            finalFare = payment.getAmount();
+        // Prioritize the ride's completed finalFare / estimatedFare
+        if (rideData != null) {
+            Object ff = rideData.get("finalFare");
+            Object ef = rideData.get("estimatedFare");
+            if (ff instanceof Number num && num.doubleValue() > 0) {
+                finalFare = num.doubleValue();
+            } else if (ef instanceof Number num && num.doubleValue() > 0) {
+                finalFare = num.doubleValue();
+            } else if (ff != null) {
+                try { finalFare = Double.parseDouble(ff.toString()); } catch (Exception ignored) {}
+            }
+        }
+
+        // If not found from ride, check if an explicit positive fareAmount was passed
+        if (finalFare <= 0) {
+            if (payment.getFareAmount() > 0) {
+                finalFare = payment.getFareAmount();
+            } else if (payment.getAmount() > 0) {
+                finalFare = payment.getAmount();
+            }
         }
 
         // If not provided, fetch the actual calculated finalFare for that specific rideId
         if (finalFare <= 0 && fareRepository != null && payment.getRideId() != null && !payment.getRideId().isBlank()) {
             Fare fare = fareRepository.findFirstByRideIdOrderByIdDesc(payment.getRideId())
                     .orElseGet(() -> fareRepository.findByRideId(payment.getRideId()).orElse(null));
+            if (fare != null) {
+                finalFare = fare.getFinalFare() > 0 ? fare.getFinalFare() : fare.getEstimatedFare();
+            }
+        }
+
+        // If still not found, check latest estimate for passenger/user
+        if (finalFare <= 0 && fareRepository != null && payment.getPassengerId() != null && !payment.getPassengerId().isBlank()) {
+            Fare fare = fareRepository.findFirstByUserIdOrderByIdDesc(payment.getPassengerId()).orElse(null);
             if (fare != null) {
                 finalFare = fare.getFinalFare() > 0 ? fare.getFinalFare() : fare.getEstimatedFare();
             }
