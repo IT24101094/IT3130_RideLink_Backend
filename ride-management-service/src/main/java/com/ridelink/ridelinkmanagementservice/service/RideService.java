@@ -167,15 +167,15 @@ public class RideService {
         }
 
         // 3. Fetch or trigger fare calculation from fare-payment-service via Feign client
-        if (finalFare == null) {
-            try {
-                Object fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
-                System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + ride.getId()
-                        + " | PaymentMethod: " + ride.getPaymentMethod() + " | Response: " + fareResponse + " ---");
+        try {
+            Object fareResponse = farePaymentServiceClient.calculateFare(ride.getId(), ride.getPaymentMethod());
+            System.out.println("--- Fare calculation triggered via FeignClient for Ride ID: " + ride.getId()
+                    + " | PaymentMethod: " + ride.getPaymentMethod() + " | Response: " + fareResponse + " ---");
+            if (finalFare == null) {
                 finalFare = parseFare(fareResponse);
-            } catch (Exception e) {
-                System.err.println("--- Failed to calculate fare via FarePaymentServiceClient for Ride ID: " + ride.getId() + " - " + e.getMessage() + " ---");
             }
+        } catch (Exception e) {
+            System.err.println("--- Failed to calculate fare via FarePaymentServiceClient for Ride ID: " + ride.getId() + " - " + e.getMessage() + " ---");
         }
 
         // 4. Fallback: calculate based on actual duration if available, or default base fare

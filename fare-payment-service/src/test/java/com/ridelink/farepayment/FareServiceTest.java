@@ -58,9 +58,12 @@ class FareServiceTest {
         fare.setPerKmRate(50);
         fare.setPerMinuteRate(5);
 
+        when(fareRepository.save(fare)).thenReturn(fare);
+
         Fare result = fareService.estimateFare(fare);
 
         // 100 + (10 × 50) + (20 × 5) = 700
         assertEquals(700.0, result.getEstimatedFare());
+        verify(fareRepository, times(1)).save(fare);
     }
 }
