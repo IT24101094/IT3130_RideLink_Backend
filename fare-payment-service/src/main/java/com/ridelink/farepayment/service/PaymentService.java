@@ -2,10 +2,13 @@ package com.ridelink.farepayment.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 import com.ridelink.farepayment.dto.DriverPaymentStatsDto;
 
@@ -34,16 +37,16 @@ public class PaymentService {
     public Payment processPayment(Payment payment) {
 
         // Auto-fetch ride details from ride-management-service if rideId is provided
-        java.util.Map<String, Object> rideData = null;
+        Map<String, Object> rideData = null;
         if (payment.getRideId() != null && !payment.getRideId().isBlank()) {
             try {
-                org.springframework.web.client.RestClient client = org.springframework.web.client.RestClient.builder()
+                RestClient client = RestClient.builder()
                         .baseUrl("http://localhost:8083")
                         .build();
                 rideData = client.get()
                         .uri("/api/rides/{id}", payment.getRideId())
                         .retrieve()
-                        .body(java.util.Map.class);
+                        .body(new ParameterizedTypeReference<Map<String, Object>>() {});
             } catch (Exception e) {
                 System.err.println("--- PaymentService: Failed to fetch ride details for Ride ID " + payment.getRideId() + ": " + e.getMessage() + " ---");
             }
